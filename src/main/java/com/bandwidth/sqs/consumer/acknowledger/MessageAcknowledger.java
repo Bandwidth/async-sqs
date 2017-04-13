@@ -81,7 +81,7 @@ public abstract class MessageAcknowledger<T> {
      * retried after the given duration.
      * Note that there is a maximum of 120,000 messages in-flight per SQS queue, and a single message cannot be extended
      * beyond a total of 12 hours. Because of these limitations, this is best used for short durations.
-     * If you need to delay a high volume of messages, use modify instead.
+     * If you need to delay a high volume of messages, use replace instead.
      */
     public void delay(Duration newVisibilityTimeout) {
         ackModeSingle.onSuccess(AckMode.DELAY);
@@ -102,14 +102,14 @@ public abstract class MessageAcknowledger<T> {
      * It may be a good idea to modify the message and include your own retry count, since the SQS receiveCount will be
      * reset to 0 with a new message.
      */
-    public void modify(T newMessage, Duration delay) {
+    public void replace(T newMessage, Duration delay) {
         ackModeSingle.onSuccess(AckMode.MODIFY);
         doTransfer(newMessage, queueUrl, delay).subscribeWith(ackingComplete);
     }
 
     /**
-     * Same as modify, but the modified message is published to a different SQS queue.
-     * If you want to publish a modified or delayed message to the SAME queue, you must use modify or requeue instead.
+     * Same as replace, but the modified message is published to a different SQS queue.
+     * If you want to publish a modified or delayed message to the SAME queue, you must use replace or requeue instead.
      */
     public void transfer(T newMessage, String newQueueUrl, Duration delay) {
         ackModeSingle.onSuccess(AckMode.TRANSFER);

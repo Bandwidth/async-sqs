@@ -7,22 +7,14 @@
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/target/generated-sources/annotations" isTestSource="false" generated="true" />
-      <excludeFolder url="file://$MODULE_DIR$/target/classes" />
-      <excludeFolder url="file://$MODULE_DIR$/target/cobertura" />
-      <excludeFolder url="file://$MODULE_DIR$/target/failsafe-reports" />
-      <excludeFolder url="file://$MODULE_DIR$/target/generated-classes" />
-      <excludeFolder url="file://$MODULE_DIR$/target/maven-archiver" />
-      <excludeFolder url="file://$MODULE_DIR$/target/site" />
-      <excludeFolder url="file://$MODULE_DIR$/target/surefire-reports" />
-      <excludeFolder url="file://$MODULE_DIR$/target/test-classes" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="catapult-model" />
-    <orderEntry type="module" module-name="catapult-utils" />
+    <orderEntry type="library" name="Maven: com.catapult.messaging:catapult-model:0.0.17-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.catapult.messaging:catapult-utils:0.0.17-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.libphonenumber:libphonenumber:8.0.0" level="project" />
-    <orderEntry type="module" module-name="catapult-logging" />
+    <orderEntry type="library" name="Maven: com.catapult.messaging:catapult-logging:0.0.17-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.janino:janino:2.7.8" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.janino:commons-compiler:2.7.8" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter-logging:1.4.1.RELEASE" level="project" />
@@ -67,7 +59,7 @@
     <orderEntry type="library" name="Maven: com.typesafe.netty:netty-reactive-streams:1.0.8" level="project" />
     <orderEntry type="library" name="Maven: org.javassist:javassist:3.20.0-GA" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.21" level="project" />
-    <orderEntry type="module" module-name="catapult-testing" scope="TEST" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.catapult.messaging:catapult-testing:0.0.17-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.googlecode.zohhak:zohhak:1.1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.apache.commons:commons-lang3:3.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.springframework.boot:spring-boot-starter-test:1.4.1.RELEASE" level="project" />

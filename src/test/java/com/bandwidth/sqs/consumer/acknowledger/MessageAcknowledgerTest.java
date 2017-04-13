@@ -13,8 +13,6 @@ import com.amazonaws.services.sqs.model.DeleteMessageResult;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 import com.bandwidth.sqs.client.SqsAsyncIoClient;
-import com.bandwidth.sqs.consumer.acknowledger.DefaultMessageAcknowledger;
-import com.bandwidth.sqs.consumer.acknowledger.MessageAcknowledger;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -72,7 +70,7 @@ public class MessageAcknowledgerTest {
 
     @Test
     public void testModify() {
-        messageAcknowledger.modify(message, Duration.ZERO);
+        messageAcknowledger.replace(message, Duration.ZERO);
         verify(sqsAsyncIoClientMock).sendMessage(any());
         verify(sqsAsyncIoClientMock).deleteMessage(any());
         assertCompletedMode(MessageAcknowledger.AckMode.MODIFY);
