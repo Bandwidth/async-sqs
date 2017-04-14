@@ -56,6 +56,7 @@ public class AsyncRequestSenderTest {
     private final StaxResponseHandler<SendMessageResult> staxResponseHandlerMock = mock(StaxResponseHandler.class);
 
     private final Request awsHttpRequestMock = mock(Request.class);
+    private final org.asynchttpclient.Request asyncRequestMock = mock(org.asynchttpclient.Request.class);
     private final AmazonWebServiceResponse awsResponseMock = mock(AmazonWebServiceResponse.class);
     private final Response responseMock = mock(Response.class);
     private final HttpResponse httpResponseMock = mock(HttpResponse.class);
@@ -81,10 +82,10 @@ public class AsyncRequestSenderTest {
                 new StringInputStream(ERROR_RESPONSE_SENDER_ERROR));
         when(staxResponseHandlerMock.handle(any())).thenReturn(awsResponseMock);
         when(awsResponseMock.getResult()).thenReturn(sendMessageResultMock);
+        when(requestAdapterMock.apply(any())).thenReturn(asyncRequestMock);
 
         doAnswer(invocation -> {
-            AsyncCompletionHandler handler = invocation.getArgumentAt(1,
-                    AsyncCompletionHandler.class);
+            AsyncCompletionHandler handler = invocation.getArgument(1);
             handler.onCompleted(responseMock);
             return null;
         }).when(httpClientMock).executeRequest((org.asynchttpclient.Request) any(), any());
@@ -108,8 +109,7 @@ public class AsyncRequestSenderTest {
     public void httpClientOnThrowableTest() {
         Exception exception = new RuntimeException();
         doAnswer(invocation -> {
-            AsyncCompletionHandler handler = invocation.getArgumentAt(1,
-                    AsyncCompletionHandler.class);
+            AsyncCompletionHandler handler = invocation.getArgument(1);
             handler.onThrowable(exception);
             return null;
         }).when(httpClientMock).executeRequest((org.asynchttpclient.Request) any(), any());

@@ -1,7 +1,6 @@
 package com.bandwidth.sqs.consumer;
 
 import com.amazonaws.services.sqs.model.Message;
-import com.catapult.messaging.model.CatapultImmutable;
 
 import org.immutables.value.Value.Auxiliary;
 import org.immutables.value.Value.Immutable;
@@ -19,7 +18,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  */
 
 @Immutable
-@CatapultImmutable
 public abstract class TimedMessage {
 
     public abstract Message getMessage();

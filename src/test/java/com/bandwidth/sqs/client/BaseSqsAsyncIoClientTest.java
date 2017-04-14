@@ -52,7 +52,7 @@ public class BaseSqsAsyncIoClientTest {
         when(httpResponseMock.getStatusCode()).thenReturn(200);
 
         when(asyncHttpClientMock.executeRequest(any(Request.class), any())).then(invocationOnMock -> {
-            invocationOnMock.getArgumentAt(1, AsyncCompletionHandler.class).onCompleted(mock(Response.class));
+            ((AsyncCompletionHandler)invocationOnMock.getArgument(1)).onCompleted(mock(Response.class));
             return null;
         });
         when(mockResponseAdapter.apply(any(), any())).thenReturn(httpResponseMock);

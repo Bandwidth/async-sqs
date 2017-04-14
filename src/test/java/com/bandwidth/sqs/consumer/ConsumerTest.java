@@ -1,6 +1,8 @@
 package com.bandwidth.sqs.consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
@@ -49,6 +51,7 @@ import io.reactivex.Single;
 import io.reactivex.SingleObserver;
 import io.reactivex.subjects.SingleSubject;
 
+@SuppressWarnings("unchecked")
 public class ConsumerTest {
 
     private static final String QUEUE_URL = "http://www.domain/path";
@@ -59,38 +62,16 @@ public class ConsumerTest {
     private static final int MESSAGE_COUNT = 7;
     private static final Duration WINDOW_SIZE = Duration.ofSeconds(10);
 
-    @Rule
-    public MockitoRule mockitoRule = MockitoJUnit.rule();
-
-    @Spy
-    private ArrayDeque<TimedMessage> messageBufferEmpty;
-
-    @Spy
-    private ArrayDeque<TimedMessage> messageBufferSmall;
-
-    @Spy
-    private ArrayDeque<TimedMessage> messageBufferFull;
-
-    @Mock
-    private BackoffStrategy backoffStrategyMock;
-
-    @Mock
-    private ConsumerManager consumerManagerMock;
-
-    @Mock
-    private ConsumerHandler<Message> consumerHandlerMock;
-
-    @Mock
-    private SqsAsyncIoClient sqsClientMock;
-
-    @Mock
-    private Message messageMock;
-
-    @Mock
-    private LoadBalanceStrategy loadBalanceStrategyMock;
-
-    @Mock
-    private ExpirationStrategy expirationStrategyMock;
+    private final ArrayDeque<TimedMessage> messageBufferEmpty = spy(new ArrayDeque<TimedMessage>());
+    private final ArrayDeque<TimedMessage> messageBufferSmall = spy(new ArrayDeque<TimedMessage>());
+    private final ArrayDeque<TimedMessage> messageBufferFull = spy(new ArrayDeque<TimedMessage>());
+    private final BackoffStrategy backoffStrategyMock = mock(BackoffStrategy.class);
+    private final ConsumerManager consumerManagerMock = mock(ConsumerManager.class);
+    private final ConsumerHandler<Message> consumerHandlerMock = mock(ConsumerHandler.class);
+    private final SqsAsyncIoClient sqsClientMock = mock(SqsAsyncIoClient.class);
+    private final Message messageMock = mock(Message.class);
+    private final LoadBalanceStrategy loadBalanceStrategyMock = mock(LoadBalanceStrategy.class);
+    private final ExpirationStrategy expirationStrategyMock = mock(ExpirationStrategy.class);
 
     @Captor
     private ArgumentCaptor<MessageAcknowledger> acknowledgerCaptor;
@@ -103,8 +84,7 @@ public class ConsumerTest {
 
     private Consumer consumer;
 
-    @Before
-    public void setUp() {
+    public ConsumerTest() {
         when(consumerHandlerMock.getPermitChangeRequests()).thenReturn(Observable.never());
         when(backoffStrategyMock.getWindowSize()).thenReturn(WINDOW_SIZE);
         when(consumerManagerMock.getSqsClient()).thenReturn(sqsClientMock);
@@ -118,11 +98,11 @@ public class ConsumerTest {
 
         consumer.setLoadBalanceStrategy(loadBalanceStrategyMock);
 
-        messageBufferSmall.push(TimedMessage.builder().withMessage(messageMock).build());
+        messageBufferSmall.push(TimedMessage.builder().message(messageMock).build());
         for (int i = 0; i < MAX_QUEUE_SIZE; i++) {
-            messageBufferFull.push(TimedMessage.builder().withMessage(messageMock).build());
+            messageBufferFull.push(TimedMessage.builder().message(messageMock).build());
         }
-        when(backoffStrategyMock.getDelayTime(anyInt())).thenReturn(Duration.ZERO);
+        when(backoffStrategyMock.getDelayTime(anyDouble())).thenReturn(Duration.ZERO);
         when(sqsClientMock.receiveMessage(any())).thenReturn(Single.never());
         when(sqsClientMock.deleteMessage(any())).thenReturn(Single.never());
 
@@ -194,7 +174,7 @@ public class ConsumerTest {
                 .build();
 
         consumer.setMessageBuffer(messageBufferSmall);
-        when(backoffStrategyMock.getDelayTime(anyInt())).thenReturn(Duration.ofDays(999999));
+        when(backoffStrategyMock.getDelayTime(anyDouble())).thenReturn(Duration.ofDays(999999));
         consumer.checkIfBackoffDelayNeeded();
         consumer.start();//backoffDelay prevents consumer from being queued
         verify(consumerManagerMock, never()).queueTask(any());
@@ -355,7 +335,7 @@ public class ConsumerTest {
         when(sqsClientMock.receiveMessage(any())).thenReturn(singleSubject);
 
         doAnswer((invocation -> {
-            invocation.getArgumentAt(1, MessageAcknowledger.class).delete();
+            ((MessageAcknowledger)invocation.getArgument(1)).delete();
             return null;
         })).when(consumerHandlerMock).handleMessage(any(), any());
 
@@ -376,7 +356,7 @@ public class ConsumerTest {
         when(sqsClientMock.receiveMessage(any())).thenReturn(singleSubject);
 
         doAnswer((invocation -> {
-            invocation.getArgumentAt(1, MessageAcknowledger.class).ignore();
+            ((MessageAcknowledger)invocation.getArgument(1)).ignore();
             return null;
         })).when(consumerHandlerMock).handleMessage(any(), any());
 

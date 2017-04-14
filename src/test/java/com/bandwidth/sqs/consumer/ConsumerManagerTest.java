@@ -7,12 +7,7 @@ import static org.mockito.Mockito.verify;
 import com.bandwidth.sqs.client.SqsAsyncIoClient;
 import com.bandwidth.sqs.consumer.strategy.loadbalance.LoadBalanceStrategy.Action;
 
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.time.Duration;
 import java.util.Timer;
@@ -23,25 +18,14 @@ public class ConsumerManagerTest {
 
     private static final int MAX_LOAD_BALANCED_REQUESTS = 2;
 
-    @Rule
-    public MockitoRule mockitoRule = MockitoJUnit.rule();
-
-    @Mock
-    private ExecutorService threadPoolMock;
-
-    @Mock
-    private SqsAsyncIoClient sqsClient;
-
-    @Mock
-    private Consumer consumerMock;
-
-    @Mock
-    private Consumer consumerMock2;
+    private final ExecutorService threadPoolMock = mock(ExecutorService.class);
+    private final SqsAsyncIoClient sqsClient = mock(SqsAsyncIoClient.class);
+    private final Consumer consumerMock = mock(Consumer.class);
+    private final Consumer consumerMock2 = mock(Consumer.class);
 
     private ConsumerManager consumerManager;
 
-    @Before
-    public void setUp() {
+    public ConsumerManagerTest() {
         consumerManager = new ConsumerManager(MAX_LOAD_BALANCED_REQUESTS, threadPoolMock,
                 sqsClient);
         consumerManager.addConsumer(consumerMock);

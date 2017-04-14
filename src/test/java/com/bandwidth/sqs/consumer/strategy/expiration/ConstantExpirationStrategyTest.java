@@ -22,8 +22,8 @@ public class ConstantExpirationStrategyTest {
     @Test
     public void testIsExpiredTrue() {
         TimedMessage timedMessage = TimedMessage.builder()
-                .withMessage(messageMock)
-                .withReceivedTime(Instant.now().minus(EXPIRED_AGE))
+                .message(messageMock)
+                .receivedTime(Instant.now().minus(EXPIRED_AGE))
                 .build();
         assertThat(constantExpirationStrategy.isExpired(timedMessage)).isTrue();
     }
@@ -31,8 +31,8 @@ public class ConstantExpirationStrategyTest {
     @Test
     public void testIsExpiredFalse() {
         TimedMessage timedMessage = TimedMessage.builder()
-                .withMessage(messageMock)
-                .withReceivedTime(Instant.now().minus(NEW_MESSAGE_AGE))
+                .message(messageMock)
+                .receivedTime(Instant.now().minus(NEW_MESSAGE_AGE))
                 .build();
         assertThat(constantExpirationStrategy.isExpired(timedMessage)).isFalse();
     }

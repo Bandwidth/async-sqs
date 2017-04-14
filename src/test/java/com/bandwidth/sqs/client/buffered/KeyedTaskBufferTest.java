@@ -1,9 +1,11 @@
 package com.bandwidth.sqs.client.buffered;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -31,12 +33,7 @@ public class KeyedTaskBufferTest {
 
     private final Timer timerMock = mock(Timer.class);
 
-    ArgumentCaptor<TimerTask> timerTaskCaptor = new ArgumentCaptor<>();
-
-    @Before
-    public void init() {
-        doNothing().when(timerMock).schedule(timerTaskCaptor.capture(), anyInt());
-    }
+    private final ArgumentCaptor<TimerTask> timerTaskCaptor = ArgumentCaptor.forClass(TimerTask.class);
 
     @Test
     public void testBufferFull() {
@@ -66,6 +63,7 @@ public class KeyedTaskBufferTest {
         taskBuffer.setTimer(timerMock);
         taskBuffer.addData(KEY_A, 1);
         taskBuffer.addData(KEY_A, 2);
+        verify(timerMock).schedule(timerTaskCaptor.capture(), anyLong());
         timerTaskCaptor.getValue().run();
         assertThat(count).isEqualTo(1 + 2);
     }
@@ -77,6 +75,7 @@ public class KeyedTaskBufferTest {
         taskBuffer.addData(KEY_A, 1);
         taskBuffer.addData(KEY_A, 2);
         taskBuffer.addData(KEY_A, 3);
+        verify(timerMock).schedule(timerTaskCaptor.capture(), anyLong());
         timerTaskCaptor.getValue().run();
         assertThat(count).isEqualTo(1 + 2 + 3);
     }

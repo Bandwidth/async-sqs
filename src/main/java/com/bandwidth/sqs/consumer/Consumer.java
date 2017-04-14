@@ -336,7 +336,7 @@ public class Consumer {
         public void onSuccess(ReceiveMessageResult result) {
             List<TimedMessage> messages = result.getMessages().stream()
                     .map((message) -> TimedMessage.builder()
-                            .withMessage(message)
+                            .message(message)
                             .build()
                     ).collect(Collectors.toList());
             addMessagesToBuffer(messages);
