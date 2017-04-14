@@ -1,0 +1,11 @@
+language: java
+jdk:
+- oraclejdk8
+script: bash ./deploy.sh
+before_install:
+- openssl aes-256-cbc -K $encrypted_546795be1bf0_key -iv $encrypted_546795be1bf0_iv
+  -in deploy_key.enc -out deploy_key -d
+env:
+  global:
+  - ENCRYPTION_LABEL: "546795be1bf0"
+  - COMMIT_AUTHOR_EMAIL: "fuchsnj@gmail.com"

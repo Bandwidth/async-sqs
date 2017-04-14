@@ -1,0 +1,8 @@
+com.bandwidth.sqs.client
+com.bandwidth.sqs.client.buffered
+com.bandwidth.sqs.consumer
+com.bandwidth.sqs.consumer.acknowledger
+com.bandwidth.sqs.consumer.handler
+com.bandwidth.sqs.consumer.strategy.backoff
+com.bandwidth.sqs.consumer.strategy.expiration
+com.bandwidth.sqs.consumer.strategy.loadbalance
