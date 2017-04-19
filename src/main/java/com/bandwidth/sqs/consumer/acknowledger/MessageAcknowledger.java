@@ -14,7 +14,7 @@ import io.reactivex.subjects.CompletableSubject;
 import io.reactivex.subjects.SingleSubject;
 
 
-public abstract class MessageAcknowledger<T> {
+public class MessageAcknowledger<T> {
 
     protected final SqsAsyncIoClient sqsClient;
     protected final String queueUrl;
@@ -23,22 +23,30 @@ public abstract class MessageAcknowledger<T> {
     private final SingleSubject<AckMode> ackModeSingle;
     private final CompletableSubject ackingComplete;
 
-    public MessageAcknowledger(SqsAsyncIoClient sqsClient, String queueUrl, String receiptId) {
+    private final MessagePublisher<T> messagePublisher;
+
+    public MessageAcknowledger(SqsAsyncIoClient sqsClient, String queueUrl, String receiptId,
+            MessagePublisher<T> messagePublisher) {
         this.sqsClient = sqsClient;
         this.queueUrl = queueUrl;
         this.receiptId = receiptId;
 
         this.ackModeSingle = SingleSubject.create();
         this.ackingComplete = CompletableSubject.create();
+        this.messagePublisher = messagePublisher;
     }
 
-    public MessageAcknowledger(MessageAcknowledger<?> delegate) {
+    /**
+     * Delegating constructor. Any ack method called on this instance will also call it on the delegate.
+     */
+    public MessageAcknowledger(MessageAcknowledger<?> delegate, MessagePublisher<T> messagePublisher) {
         this.sqsClient = delegate.sqsClient;
         this.queueUrl = delegate.queueUrl;
         this.receiptId = delegate.receiptId;
 
         this.ackModeSingle = delegate.ackModeSingle;
         this.ackingComplete = delegate.ackingComplete;
+        this.messagePublisher = messagePublisher;
     }
 
     /**
@@ -121,11 +129,9 @@ public abstract class MessageAcknowledger<T> {
                 .withQueueUrl(queueUrl)
                 .withReceiptHandle(receiptId);
 
-        return publishMessage(newMessage, newQueueUrl, delay)
+        return messagePublisher.publishMessage(newMessage, newQueueUrl, delay)
                 .concatWith(sqsClient.deleteMessage(deleteRequest).toCompletable());
     }
-
-    public abstract Completable publishMessage(T newMessage, String newQueueUrl, Duration delay);
 
     public Single<AckMode> getAckMode() {
         return ackModeSingle;
@@ -133,6 +139,10 @@ public abstract class MessageAcknowledger<T> {
 
     public Completable getCompletable() {
         return ackingComplete;
+    }
+
+    public MessagePublisher<T> getMessagePublisher(){
+        return messagePublisher;
     }
 
     public enum AckMode {

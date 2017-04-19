@@ -19,6 +19,7 @@ import org.junit.Test;
 
 import java.time.Duration;
 
+import io.reactivex.Completable;
 import io.reactivex.Single;
 
 @SuppressWarnings("unchecked")
@@ -27,17 +28,18 @@ public class MessageAcknowledgerTest {
     private static final String RECEIPT_ID = "123-adfg-w4-dfga-346-zfg";
 
     private final SqsAsyncIoClient sqsAsyncIoClientMock = mock(SqsAsyncIoClient.class);
+    private final MessagePublisher messagePublisherMock = mock(MessagePublisher.class);
     private final Message message = new Message().withBody("body");
 
     private final MessageAcknowledger<Message> messageAcknowledger =
-            new DefaultMessageAcknowledger(sqsAsyncIoClientMock, QUEUE_URL, RECEIPT_ID);
+            new MessageAcknowledger(sqsAsyncIoClientMock, QUEUE_URL, RECEIPT_ID, messagePublisherMock);
 
-    @Before
-    public void setup() {
+    public MessageAcknowledgerTest() {
         when(sqsAsyncIoClientMock.deleteMessage(any())).thenReturn(Single.just(mock(DeleteMessageResult.class)));
         when(sqsAsyncIoClientMock.changeMessageVisibility(any()))
                 .thenReturn(Single.just(mock(ChangeMessageVisibilityResult.class)));
         when(sqsAsyncIoClientMock.sendMessage(any())).thenReturn(Single.just(mock(SendMessageResult.class)));
+        when(messagePublisherMock.publishMessage(any(), any(), any())).thenReturn(Completable.complete());
     }
 
     @Test
@@ -71,7 +73,7 @@ public class MessageAcknowledgerTest {
     @Test
     public void testModify() {
         messageAcknowledger.replace(message, Duration.ZERO);
-        verify(sqsAsyncIoClientMock).sendMessage(any());
+        verify(messagePublisherMock).publishMessage(any(), any(), any());
         verify(sqsAsyncIoClientMock).deleteMessage(any());
         assertCompletedMode(MessageAcknowledger.AckMode.MODIFY);
     }
@@ -79,7 +81,7 @@ public class MessageAcknowledgerTest {
     @Test
     public void testTransfer() {
         messageAcknowledger.transfer(message, QUEUE_URL, Duration.ZERO);
-        verify(sqsAsyncIoClientMock).sendMessage(any());
+        verify(messagePublisherMock).publishMessage(any(), any(), any());
         verify(sqsAsyncIoClientMock).deleteMessage(any());
         assertCompletedMode(MessageAcknowledger.AckMode.TRANSFER);
     }
