@@ -15,6 +15,7 @@ import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchResult;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageResult;
+import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
@@ -42,6 +43,8 @@ import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
 
+import java.time.Duration;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -169,11 +172,22 @@ public class BaseSqsAsyncIoClient implements SqsAsyncIoClient {
     }
 
     /**
-     * Sends a single message immediately
+     * Publishes a message immediately
+     *
+     * @param message The message to publish
+     * @param queueUrl The queue to send the message to
+     * @param maybeDelay Amount of time a message is delayed before it can be consumed (Max 15 minutes)
+     *                   or the default delay of the SQS queue if "empty"
+     * @return
      */
     @Override
-    public Single<SendMessageResult> sendMessage(SendMessageRequest request) {
-        return sendMessageRequestSender.send(request);
+    public Single<SendMessageResult> publishMessage(Message message, String queueUrl, Optional<Duration> maybeDelay) {
+            SendMessageRequest sendRequest = new SendMessageRequest()
+                    .withMessageAttributes(message.getMessageAttributes())
+                    .withMessageBody(message.getBody())
+                    .withQueueUrl(queueUrl);
+            maybeDelay.ifPresent((delay) -> sendRequest.withDelaySeconds((int)delay.getSeconds()));
+            return sendMessageRequestSender.send(sendRequest);
     }
 
     @Override

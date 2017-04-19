@@ -13,8 +13,8 @@ import com.amazonaws.services.sqs.model.DeleteMessageResult;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 import com.bandwidth.sqs.client.SqsAsyncIoClient;
+import com.bandwidth.sqs.publisher.MessagePublisher;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -38,8 +38,10 @@ public class MessageAcknowledgerTest {
         when(sqsAsyncIoClientMock.deleteMessage(any())).thenReturn(Single.just(mock(DeleteMessageResult.class)));
         when(sqsAsyncIoClientMock.changeMessageVisibility(any()))
                 .thenReturn(Single.just(mock(ChangeMessageVisibilityResult.class)));
-        when(sqsAsyncIoClientMock.sendMessage(any())).thenReturn(Single.just(mock(SendMessageResult.class)));
-        when(messagePublisherMock.publishMessage(any(), any(), any())).thenReturn(Completable.complete());
+        when(sqsAsyncIoClientMock.publishMessage(any(), any(), any()))
+                .thenReturn(Single.just(mock(SendMessageResult.class)));
+        when(messagePublisherMock.publishMessage(any(), any(), any()))
+                .thenReturn(Single.just(mock(SendMessageResult.class)));
     }
 
     @Test

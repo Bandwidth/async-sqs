@@ -3,10 +3,11 @@ package com.bandwidth.sqs.consumer.acknowledger;
 
 import com.amazonaws.services.sqs.model.ChangeMessageVisibilityRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.bandwidth.sqs.client.SqsAsyncIoClient;
+import com.bandwidth.sqs.publisher.MessagePublisher;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
@@ -129,8 +130,9 @@ public class MessageAcknowledger<T> {
                 .withQueueUrl(queueUrl)
                 .withReceiptHandle(receiptId);
 
-        return messagePublisher.publishMessage(newMessage, newQueueUrl, delay)
-                .concatWith(sqsClient.deleteMessage(deleteRequest).toCompletable());
+        return messagePublisher.publishMessage(newMessage, newQueueUrl, Optional.of(delay))
+                .flatMap((response) -> sqsClient.deleteMessage(deleteRequest))
+                .toCompletable();
     }
 
     public Single<AckMode> getAckMode() {
@@ -141,7 +143,7 @@ public class MessageAcknowledger<T> {
         return ackingComplete;
     }
 
-    public MessagePublisher<T> getMessagePublisher(){
+    public MessagePublisher<T> getMessagePublisher() {
         return messagePublisher;
     }
 

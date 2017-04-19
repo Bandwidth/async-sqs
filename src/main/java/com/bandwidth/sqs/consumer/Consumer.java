@@ -5,9 +5,8 @@ import static java.util.Objects.requireNonNull;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
-import com.bandwidth.sqs.consumer.acknowledger.DefaultMessagePublisher;
+import com.bandwidth.sqs.client.SqsAsyncIoClient;
 import com.bandwidth.sqs.consumer.acknowledger.MessageAcknowledger;
-import com.bandwidth.sqs.consumer.acknowledger.MessagePublisher;
 import com.bandwidth.sqs.consumer.strategy.expiration.ExpirationStrategy;
 import com.bandwidth.sqs.consumer.strategy.loadbalance.DefaultLoadBalanceStrategy;
 import com.bandwidth.sqs.consumer.strategy.loadbalance.LoadBalanceStrategy;
@@ -271,9 +270,9 @@ public class Consumer {
         }
         Message message = timedMessage.getMessage();
 
-        MessagePublisher<Message> publisher = new DefaultMessagePublisher(manager.getSqsClient());
+        SqsAsyncIoClient sqsClient = manager.getSqsClient();
         MessageAcknowledger<Message> acknowledger =
-                new MessageAcknowledger<>(manager.getSqsClient(), queueUrl, message.getReceiptHandle(), publisher);
+                new MessageAcknowledger<>(sqsClient, queueUrl, message.getReceiptHandle(), sqsClient);
 
         Completable.fromRunnable(() -> handler.handleMessage(message, acknowledger))
                 .andThen(acknowledger.getAckMode())

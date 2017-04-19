@@ -13,6 +13,7 @@ import com.amazonaws.services.sqs.model.ChangeMessageVisibilityRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
+import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
@@ -25,6 +26,8 @@ import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Optional;
 
 import io.reactivex.Single;
 
@@ -99,11 +102,7 @@ public class BaseSqsAsyncIoClientTest {
 
     @Test
     public void testSendMessage() throws InterruptedException {
-        SendMessageRequest sendMessageRequest = new SendMessageRequest()
-                .withQueueUrl(QUEUE_URL)
-                .withMessageBody(MESSAGE_BODY);
-
-        sqsClient.sendMessage(sendMessageRequest).test().assertComplete();
+        sqsClient.publishMessage(new Message(), QUEUE_URL).test().assertComplete();
     }
 
     @Test

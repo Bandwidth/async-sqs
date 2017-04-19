@@ -8,22 +8,27 @@ import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchResult;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageResult;
+import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageBatchResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
+import com.bandwidth.sqs.publisher.MessagePublisher;
+
+import java.time.Duration;
+import java.util.Optional;
 
 import io.reactivex.Single;
 
-public interface SqsAsyncIoClient {
+public interface SqsAsyncIoClient extends MessagePublisher<Message>{
 
     Single<ReceiveMessageResult> receiveMessage(ReceiveMessageRequest request);
 
     Single<DeleteMessageResult> deleteMessage(DeleteMessageRequest request);
 
-    Single<SendMessageResult> sendMessage(SendMessageRequest request);
+    Single<SendMessageResult> publishMessage(Message message, String queueUrl, Optional<Duration> delay);
 
     Single<ChangeMessageVisibilityResult> changeMessageVisibility(ChangeMessageVisibilityRequest request);
 
@@ -34,5 +39,7 @@ public interface SqsAsyncIoClient {
     Single<ChangeMessageVisibilityBatchResult>
         changeMessageVisibilityBatch(ChangeMessageVisibilityBatchRequest request);
 
-
+    default Single<SendMessageResult> publishMessage(Message message, String queueUrl){
+        return publishMessage(message, queueUrl, Optional.empty());
+    }
 }

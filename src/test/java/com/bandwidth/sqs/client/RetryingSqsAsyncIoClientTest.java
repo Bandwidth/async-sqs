@@ -10,6 +10,7 @@ import com.amazonaws.services.sqs.model.ChangeMessageVisibilityBatchRequest;
 import com.amazonaws.services.sqs.model.ChangeMessageVisibilityRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
+import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
@@ -17,10 +18,13 @@ import com.amazonaws.services.sqs.model.SendMessageResult;
 
 import org.junit.Test;
 
+import java.util.Optional;
+
 import io.reactivex.Single;
 
 public class RetryingSqsAsyncIoClientTest {
 
+    private static final String QUEUE_URL = "";
     private static final int RETRY_COUNT = 1;
     private static final Exception EXCEPTION = new RuntimeException();
 
@@ -30,16 +34,16 @@ public class RetryingSqsAsyncIoClientTest {
 
     @Test
     public void testNoRetryIfSuccess() {
-        when(coreSqsClientMock.sendMessage(any())).thenReturn(Single.just(new SendMessageResult()));
-        sqsClient.sendMessage(new SendMessageRequest()).test().assertComplete();
-        verify(coreSqsClientMock).sendMessage(any());
+        when(coreSqsClientMock.publishMessage(any(), any(), any())).thenReturn(Single.just(new SendMessageResult()));
+        sqsClient.publishMessage(new Message(), QUEUE_URL, Optional.empty()).test().assertComplete();
+        verify(coreSqsClientMock).publishMessage(any(), any(), any());
     }
 
     @Test
     public void testSendMessageRetry() {
-        when(coreSqsClientMock.sendMessage(any())).thenReturn(Single.error(EXCEPTION));
-        sqsClient.sendMessage(new SendMessageRequest()).test().assertError(EXCEPTION);
-        verify(coreSqsClientMock, times(2)).sendMessage(any());
+        when(coreSqsClientMock.publishMessage(any(), any(), any())).thenReturn(Single.error(EXCEPTION));
+        sqsClient.publishMessage(new Message(), QUEUE_URL, Optional.empty()).test().assertError(EXCEPTION);
+        verify(coreSqsClientMock, times(2)).publishMessage(any(), any(), any());
     }
 
     @Test
