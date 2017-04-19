@@ -9,10 +9,12 @@ import java.time.Duration;
 import io.reactivex.Completable;
 
 
-public class DefaultMessageAcknowledger extends MessageAcknowledger<Message> {
+public class DefaultMessagePublisher implements MessagePublisher<Message> {
 
-    public DefaultMessageAcknowledger(SqsAsyncIoClient sqsClient, String queueUrl, String receiptId) {
-        super(sqsClient, queueUrl, receiptId);
+    private final SqsAsyncIoClient sqsClient;
+
+    public DefaultMessagePublisher(SqsAsyncIoClient sqsClient) {
+        this.sqsClient = sqsClient;
     }
 
     @Override
