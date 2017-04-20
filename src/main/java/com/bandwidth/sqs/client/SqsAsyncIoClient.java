@@ -28,7 +28,7 @@ public interface SqsAsyncIoClient extends MessagePublisher<Message>{
 
     Single<DeleteMessageResult> deleteMessage(DeleteMessageRequest request);
 
-    Single<SendMessageResult> publishMessage(Message message, String queueUrl, Optional<Duration> delay);
+    Single<String> publishMessage(Message message, String queueUrl, Optional<Duration> delay);
 
     Single<ChangeMessageVisibilityResult> changeMessageVisibility(ChangeMessageVisibilityRequest request);
 

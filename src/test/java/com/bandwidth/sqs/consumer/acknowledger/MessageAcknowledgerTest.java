@@ -26,6 +26,7 @@ import io.reactivex.Single;
 public class MessageAcknowledgerTest {
     private static final String QUEUE_URL = "http://domain.com/path";
     private static final String RECEIPT_ID = "123-adfg-w4-dfga-346-zfg";
+    private static final String MESSAGE_ID = "message-id-q4tqeeg";
 
     private final SqsAsyncIoClient sqsAsyncIoClientMock = mock(SqsAsyncIoClient.class);
     private final MessagePublisher messagePublisherMock = mock(MessagePublisher.class);
@@ -38,10 +39,8 @@ public class MessageAcknowledgerTest {
         when(sqsAsyncIoClientMock.deleteMessage(any())).thenReturn(Single.just(mock(DeleteMessageResult.class)));
         when(sqsAsyncIoClientMock.changeMessageVisibility(any()))
                 .thenReturn(Single.just(mock(ChangeMessageVisibilityResult.class)));
-        when(sqsAsyncIoClientMock.publishMessage(any(), any(), any()))
-                .thenReturn(Single.just(mock(SendMessageResult.class)));
         when(messagePublisherMock.publishMessage(any(), any(), any()))
-                .thenReturn(Single.just(mock(SendMessageResult.class)));
+                .thenReturn(Single.just(MESSAGE_ID));
     }
 
     @Test

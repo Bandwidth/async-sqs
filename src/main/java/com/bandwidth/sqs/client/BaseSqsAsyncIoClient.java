@@ -49,6 +49,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import io.reactivex.Single;
+import io.reactivex.annotations.NonNull;
 
 
 public class BaseSqsAsyncIoClient implements SqsAsyncIoClient {
@@ -175,13 +176,13 @@ public class BaseSqsAsyncIoClient implements SqsAsyncIoClient {
      * Publishes a message immediately
      */
     @Override
-    public Single<SendMessageResult> publishMessage(Message message, String queueUrl, Optional<Duration> maybeDelay) {
+    public Single<String> publishMessage(Message message, String queueUrl, Optional<Duration> maybeDelay) {
             SendMessageRequest sendRequest = new SendMessageRequest()
                     .withMessageAttributes(message.getMessageAttributes())
                     .withMessageBody(message.getBody())
                     .withQueueUrl(queueUrl);
             maybeDelay.ifPresent((delay) -> sendRequest.withDelaySeconds((int)delay.getSeconds()));
-            return sendMessageRequestSender.send(sendRequest);
+            return sendMessageRequestSender.send(sendRequest).map(SendMessageResult::getMessageId);
     }
 
     @Override
@@ -205,35 +206,35 @@ public class BaseSqsAsyncIoClient implements SqsAsyncIoClient {
         return changeMessageVisibilityBatchRequestSender.send(request);
     }
 
-    public void setReceiveMessageRequestSender(AsyncRequestSender<ReceiveMessageRequest, ReceiveMessageResult> sender) {
+    void setReceiveMessageRequestSender(AsyncRequestSender<ReceiveMessageRequest, ReceiveMessageResult> sender) {
         this.receiveMessageRequestSender = sender;
     }
 
-    public void setDeleteMessageRequestSender(AsyncRequestSender<DeleteMessageRequest, DeleteMessageResult> sender) {
+    void setDeleteMessageRequestSender(AsyncRequestSender<DeleteMessageRequest, DeleteMessageResult> sender) {
         this.deleteMessageRequestSender = sender;
     }
 
-    public void setSendMessageRequestSender(AsyncRequestSender<SendMessageRequest, SendMessageResult> sender) {
+    void setSendMessageRequestSender(AsyncRequestSender<SendMessageRequest, SendMessageResult> sender) {
         this.sendMessageRequestSender = sender;
     }
 
-    public void setDeleteMessageBatchRequestSender(AsyncRequestSender<DeleteMessageBatchRequest,
+    void setDeleteMessageBatchRequestSender(AsyncRequestSender<DeleteMessageBatchRequest,
             DeleteMessageBatchResult> sender) {
         this.deleteMessageBatchRequestSender = sender;
     }
 
-    public void setSendMessageBatchRequestSender(AsyncRequestSender<SendMessageBatchRequest, SendMessageBatchResult>
+    void setSendMessageBatchRequestSender(AsyncRequestSender<SendMessageBatchRequest, SendMessageBatchResult>
             sender) {
         this.sendMessageBatchRequestSender = sender;
     }
 
-    public void setChangeMessageVisibilityRequestSender(AsyncRequestSender<ChangeMessageVisibilityRequest,
+    void setChangeMessageVisibilityRequestSender(AsyncRequestSender<ChangeMessageVisibilityRequest,
             ChangeMessageVisibilityResult>
             sender) {
         this.changeMessageVisibilityRequestSender = sender;
     }
 
-    public void setChangeMessageVisibilityBatchRequestSender(AsyncRequestSender<ChangeMessageVisibilityBatchRequest,
+    void setChangeMessageVisibilityBatchRequestSender(AsyncRequestSender<ChangeMessageVisibilityBatchRequest,
             ChangeMessageVisibilityBatchResult>
             sender) {
         this.changeMessageVisibilityBatchRequestSender = sender;

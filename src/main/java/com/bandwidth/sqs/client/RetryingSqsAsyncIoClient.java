@@ -44,7 +44,7 @@ public class RetryingSqsAsyncIoClient implements SqsAsyncIoClient {
     }
 
     @Override
-    public Single<SendMessageResult> publishMessage(Message message, String queueUrl, Optional<Duration> delay) {
+    public Single<String> publishMessage(Message message, String queueUrl, Optional<Duration> delay) {
         return retry(() -> delegate.publishMessage(message, queueUrl, delay));
     }
 

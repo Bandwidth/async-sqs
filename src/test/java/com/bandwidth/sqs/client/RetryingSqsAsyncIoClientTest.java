@@ -25,6 +25,7 @@ import io.reactivex.Single;
 public class RetryingSqsAsyncIoClientTest {
 
     private static final String QUEUE_URL = "";
+    private static final String MESSAGE_ID = "message-id-2oq3749uf";
     private static final int RETRY_COUNT = 1;
     private static final Exception EXCEPTION = new RuntimeException();
 
@@ -34,7 +35,7 @@ public class RetryingSqsAsyncIoClientTest {
 
     @Test
     public void testNoRetryIfSuccess() {
-        when(coreSqsClientMock.publishMessage(any(), any(), any())).thenReturn(Single.just(new SendMessageResult()));
+        when(coreSqsClientMock.publishMessage(any(), any(), any())).thenReturn(Single.just(MESSAGE_ID));
         sqsClient.publishMessage(new Message(), QUEUE_URL, Optional.empty()).test().assertComplete();
         verify(coreSqsClientMock).publishMessage(any(), any(), any());
     }

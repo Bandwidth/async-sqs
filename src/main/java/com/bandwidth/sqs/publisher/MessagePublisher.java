@@ -17,18 +17,18 @@ public interface MessagePublisher<T> {
      * @param queueUrl The queue to send the message to
      * @param maybeDelay Amount of time a message is delayed before it can be consumed (Max 15 minutes)
      *                   or the default delay of the SQS queue if "empty"
-     * @return
+     * @return The message id
      */
-    Single<SendMessageResult> publishMessage(T message, String queueUrl, Optional<Duration> maybeDelay);
+    Single<String> publishMessage(T message, String queueUrl, Optional<Duration> maybeDelay);
 
     /**
      * Publishes a message with the default delay of the SQS queue
      *
      * @param message The message to publish
      * @param queueUrl The queue to send the message to
-     * @return
+     * @return The message id
      */
-    default Single<SendMessageResult> publishMessage(T message, String queueUrl) {
+    default Single<String> publishMessage(T message, String queueUrl) {
         return publishMessage(message, queueUrl, Optional.empty());
     }
 }

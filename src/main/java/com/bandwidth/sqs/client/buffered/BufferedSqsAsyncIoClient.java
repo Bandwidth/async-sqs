@@ -25,6 +25,8 @@ import java.time.Duration;
 import java.util.Optional;
 
 import io.reactivex.Single;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Function;
 import io.reactivex.subjects.SingleSubject;
 
 
@@ -70,7 +72,7 @@ public class BufferedSqsAsyncIoClient implements SqsAsyncIoClient {
      * entered the queue, all of the pending requests will be sent in a single batch request.
      */
     @Override
-    public Single<SendMessageResult> publishMessage(Message message, String queueUrl, Optional<Duration> maybeDelay) {
+    public Single<String> publishMessage(Message message, String queueUrl, Optional<Duration> maybeDelay) {
         SendMessageBatchRequestEntry entry = new SendMessageBatchRequestEntry()
                 .withMessageAttributes(message.getMessageAttributes())
                 .withMessageBody(message.getBody());
@@ -78,7 +80,7 @@ public class BufferedSqsAsyncIoClient implements SqsAsyncIoClient {
 
         SingleSubject<SendMessageResult> singleSubject = SingleSubject.create();
         sendMessageTaskBuffer.addData(queueUrl, new BatchRequestEntry<>(entry, singleSubject));
-        return singleSubject;
+        return singleSubject.map(SendMessageResult::getMessageId);
     }
 
     /**
