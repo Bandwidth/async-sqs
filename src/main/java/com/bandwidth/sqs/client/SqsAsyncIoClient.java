@@ -38,8 +38,4 @@ public interface SqsAsyncIoClient extends MessagePublisher<Message>{
 
     Single<ChangeMessageVisibilityBatchResult>
         changeMessageVisibilityBatch(ChangeMessageVisibilityBatchRequest request);
-
-    default Single<SendMessageResult> publishMessage(Message message, String queueUrl){
-        return publishMessage(message, queueUrl, Optional.empty());
-    }
 }

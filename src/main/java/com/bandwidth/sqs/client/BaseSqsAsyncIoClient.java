@@ -173,12 +173,6 @@ public class BaseSqsAsyncIoClient implements SqsAsyncIoClient {
 
     /**
      * Publishes a message immediately
-     *
-     * @param message The message to publish
-     * @param queueUrl The queue to send the message to
-     * @param maybeDelay Amount of time a message is delayed before it can be consumed (Max 15 minutes)
-     *                   or the default delay of the SQS queue if "empty"
-     * @return
      */
     @Override
     public Single<SendMessageResult> publishMessage(Message message, String queueUrl, Optional<Duration> maybeDelay) {
