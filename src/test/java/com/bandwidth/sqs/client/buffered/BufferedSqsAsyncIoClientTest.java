@@ -13,6 +13,7 @@ import com.amazonaws.services.sqs.model.ChangeMessageVisibilityRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchResult;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
+import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
@@ -25,6 +26,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 import io.reactivex.Single;
@@ -32,6 +34,7 @@ import io.reactivex.Single;
 
 @SuppressWarnings("unchecked")
 public class BufferedSqsAsyncIoClientTest {
+    private static final String QUEUE_URL = "";
     private static final Duration MAX_WAIT = Duration.ofMillis(1234);
 
     private final BaseSqsAsyncIoClient sqsClientMock = mock(BaseSqsAsyncIoClient.class);
@@ -55,11 +58,11 @@ public class BufferedSqsAsyncIoClientTest {
 
     @Test
     public void shouldSendBatchWhenBufferReachesMaxBufferSizeTest() {
-        SendMessageRequest request = mock(SendMessageRequest.class);
+        Message message = mock(Message.class);
         IntStream.range(0, BufferedSqsAsyncIoClient.MAX_BATCH_SIZE - 1)
-                .forEach(i -> bufferedSqsClient.sendMessage(request));
+                .forEach(i -> bufferedSqsClient.publishMessage(message, QUEUE_URL, Optional.empty()));
         verify(sqsClientMock, never()).sendMessageBatch(any());
-        bufferedSqsClient.sendMessage(request);
+        bufferedSqsClient.publishMessage(message, QUEUE_URL, Optional.empty());
 
         ArgumentCaptor<SendMessageBatchRequest> captor = ArgumentCaptor.forClass(SendMessageBatchRequest.class);
         verify(sqsClientMock).sendMessageBatch(captor.capture());

@@ -15,6 +15,7 @@ import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchResult;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageResult;
+import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
@@ -42,10 +43,13 @@ import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
 
+import java.time.Duration;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import io.reactivex.Single;
+import io.reactivex.annotations.NonNull;
 
 
 public class BaseSqsAsyncIoClient implements SqsAsyncIoClient {
@@ -169,11 +173,16 @@ public class BaseSqsAsyncIoClient implements SqsAsyncIoClient {
     }
 
     /**
-     * Sends a single message immediately
+     * Publishes a message immediately
      */
     @Override
-    public Single<SendMessageResult> sendMessage(SendMessageRequest request) {
-        return sendMessageRequestSender.send(request);
+    public Single<String> publishMessage(Message message, String queueUrl, Optional<Duration> maybeDelay) {
+            SendMessageRequest sendRequest = new SendMessageRequest()
+                    .withMessageAttributes(message.getMessageAttributes())
+                    .withMessageBody(message.getBody())
+                    .withQueueUrl(queueUrl);
+            maybeDelay.ifPresent((delay) -> sendRequest.withDelaySeconds((int)delay.getSeconds()));
+            return sendMessageRequestSender.send(sendRequest).map(SendMessageResult::getMessageId);
     }
 
     @Override
@@ -197,35 +206,35 @@ public class BaseSqsAsyncIoClient implements SqsAsyncIoClient {
         return changeMessageVisibilityBatchRequestSender.send(request);
     }
 
-    public void setReceiveMessageRequestSender(AsyncRequestSender<ReceiveMessageRequest, ReceiveMessageResult> sender) {
+    void setReceiveMessageRequestSender(AsyncRequestSender<ReceiveMessageRequest, ReceiveMessageResult> sender) {
         this.receiveMessageRequestSender = sender;
     }
 
-    public void setDeleteMessageRequestSender(AsyncRequestSender<DeleteMessageRequest, DeleteMessageResult> sender) {
+    void setDeleteMessageRequestSender(AsyncRequestSender<DeleteMessageRequest, DeleteMessageResult> sender) {
         this.deleteMessageRequestSender = sender;
     }
 
-    public void setSendMessageRequestSender(AsyncRequestSender<SendMessageRequest, SendMessageResult> sender) {
+    void setSendMessageRequestSender(AsyncRequestSender<SendMessageRequest, SendMessageResult> sender) {
         this.sendMessageRequestSender = sender;
     }
 
-    public void setDeleteMessageBatchRequestSender(AsyncRequestSender<DeleteMessageBatchRequest,
+    void setDeleteMessageBatchRequestSender(AsyncRequestSender<DeleteMessageBatchRequest,
             DeleteMessageBatchResult> sender) {
         this.deleteMessageBatchRequestSender = sender;
     }
 
-    public void setSendMessageBatchRequestSender(AsyncRequestSender<SendMessageBatchRequest, SendMessageBatchResult>
+    void setSendMessageBatchRequestSender(AsyncRequestSender<SendMessageBatchRequest, SendMessageBatchResult>
             sender) {
         this.sendMessageBatchRequestSender = sender;
     }
 
-    public void setChangeMessageVisibilityRequestSender(AsyncRequestSender<ChangeMessageVisibilityRequest,
+    void setChangeMessageVisibilityRequestSender(AsyncRequestSender<ChangeMessageVisibilityRequest,
             ChangeMessageVisibilityResult>
             sender) {
         this.changeMessageVisibilityRequestSender = sender;
     }
 
-    public void setChangeMessageVisibilityBatchRequestSender(AsyncRequestSender<ChangeMessageVisibilityBatchRequest,
+    void setChangeMessageVisibilityBatchRequestSender(AsyncRequestSender<ChangeMessageVisibilityBatchRequest,
             ChangeMessageVisibilityBatchResult>
             sender) {
         this.changeMessageVisibilityBatchRequestSender = sender;

@@ -10,6 +10,7 @@ import com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchResult;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageResult;
+import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
@@ -21,8 +22,11 @@ import com.bandwidth.sqs.client.BatchRequestEntry;
 import com.bandwidth.sqs.client.SqsAsyncIoClient;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import io.reactivex.Single;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Function;
 import io.reactivex.subjects.SingleSubject;
 
 
@@ -68,14 +72,15 @@ public class BufferedSqsAsyncIoClient implements SqsAsyncIoClient {
      * entered the queue, all of the pending requests will be sent in a single batch request.
      */
     @Override
-    public Single<SendMessageResult> sendMessage(SendMessageRequest request) {
+    public Single<String> publishMessage(Message message, String queueUrl, Optional<Duration> maybeDelay) {
         SendMessageBatchRequestEntry entry = new SendMessageBatchRequestEntry()
-                .withDelaySeconds(request.getDelaySeconds())
-                .withMessageAttributes(request.getMessageAttributes())
-                .withMessageBody(request.getMessageBody());
+                .withMessageAttributes(message.getMessageAttributes())
+                .withMessageBody(message.getBody());
+        maybeDelay.ifPresent((delay) -> entry.setDelaySeconds((int)delay.getSeconds()));
+
         SingleSubject<SendMessageResult> singleSubject = SingleSubject.create();
-        sendMessageTaskBuffer.addData(request.getQueueUrl(), new BatchRequestEntry<>(entry, singleSubject));
-        return singleSubject;
+        sendMessageTaskBuffer.addData(queueUrl, new BatchRequestEntry<>(entry, singleSubject));
+        return singleSubject.map(SendMessageResult::getMessageId);
     }
 
     /**
