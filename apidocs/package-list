@@ -6,3 +6,4 @@ com.bandwidth.sqs.consumer.handler
 com.bandwidth.sqs.consumer.strategy.backoff
 com.bandwidth.sqs.consumer.strategy.expiration
 com.bandwidth.sqs.consumer.strategy.loadbalance
+com.bandwidth.sqs.publisher
