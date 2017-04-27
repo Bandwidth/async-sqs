@@ -2,10 +2,6 @@ package com.bandwidth.sqs.consumer;
 
 import static java.util.Objects.requireNonNull;
 
-import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
-import com.amazonaws.services.sqs.model.ReceiveMessageResult;
-import com.bandwidth.sqs.client.SqsAsyncIoClient;
 import com.bandwidth.sqs.consumer.acknowledger.MessageAcknowledger;
 import com.bandwidth.sqs.consumer.strategy.expiration.ExpirationStrategy;
 import com.bandwidth.sqs.consumer.strategy.loadbalance.DefaultLoadBalanceStrategy;
@@ -13,6 +9,8 @@ import com.bandwidth.sqs.consumer.strategy.loadbalance.LoadBalanceStrategy;
 import com.bandwidth.sqs.consumer.strategy.loadbalance.LoadBalanceStrategy.Action;
 import com.bandwidth.sqs.consumer.strategy.backoff.BackoffStrategy;
 import com.bandwidth.sqs.consumer.handler.ConsumerHandler;
+import com.bandwidth.sqs.queue.SqsMessage;
+import com.bandwidth.sqs.queue.SqsQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,11 +21,11 @@ import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import io.reactivex.Completable;
 import io.reactivex.SingleObserver;
@@ -38,8 +36,8 @@ import static com.bandwidth.sqs.consumer.acknowledger.MessageAcknowledger.AckMod
 
 public class Consumer {
     public static final int NUM_MESSAGES_PER_REQUEST = 10;
-    public static final int LOAD_BALANCED_REQUEST_WAIT_TIME_SECONDS = 1;
-    public static final int MAX_WAIT_TIME_SECONDS = 20;
+    public static final Duration LOAD_BALANCED_REQUEST_WAIT_TIME = Duration.ofSeconds(1);
+    public static final Duration MAX_WAIT_TIME = Duration.ofSeconds(20);
     private static final Duration DEFAULT_SHUTDOWN_TIMEOUT = Duration.ofSeconds(30);
 
     static final long MESSAGE_SUCCESS = 0;
@@ -49,10 +47,10 @@ public class Consumer {
 
     private static final Logger LOG = LoggerFactory.getLogger(Consumer.class);
 
-    private final String queueUrl;
+    private final SqsQueue<String> sqsQueue;
     private final AtomicInteger maxPermits;
     private final AtomicInteger remainingPermits;
-    private final ConsumerHandler<Message> handler;
+    private final ConsumerHandler<String> handler;
 
     private final int maxQueueSize;
     private final BackoffStrategy backoffStrategy;
@@ -63,7 +61,7 @@ public class Consumer {
     private final CompletableSubject shutdownCompletable = CompletableSubject.create();
     private final Disposable permitChangeDisposable;
 
-    private ArrayDeque<TimedMessage> messageBuffer = new ArrayDeque<>();
+    private ArrayDeque<SqsMessage<String>> messageBuffer = new ArrayDeque<>();
     private boolean waitingInQueue = false;
     private TimeWindowAverage failureAverage = null;
     private Instant backoffEndTime = Instant.EPOCH;
@@ -71,10 +69,10 @@ public class Consumer {
     private boolean shuttingDown = false;
 
     /**
-     * Adds a consumer for a specific SQS Queue. Once a consumer is started, the handler will be called
+     * Adds a consumer for a specific SQS DefaultSqsQueue. Once a consumer is started, the handler will be called
      * from a thread-pool to process messages. It is safe to use blocking calls in the handler as
      * this will not impact performance if a sufficient number of `workerThreads` are configured in the ConsumerManager.
-     * Only one consumer is normally needed per SQS Queue. A single long-polling request is always in-flight
+     * Only one consumer is normally needed per SQS DefaultSqsQueue. A single long-polling request is always in-flight
      * for each consumer in addition to the load-balanced requests configured in the `ConsumerManager`.
      */
     public Consumer(ConsumerBuilder builder) {
@@ -83,7 +81,7 @@ public class Consumer {
         this.manager = requireNonNull(builder.consumerManager);
         this.expirationStrategy = requireNonNull(builder.expirationStrategy);
 
-        this.queueUrl = builder.queueUrl;
+        this.sqsQueue = builder.sqsQueue;
         this.maxPermits = new AtomicInteger(builder.numPermits);
         this.remainingPermits = new AtomicInteger(builder.numPermits);
         this.maxQueueSize = Math.max(NUM_MESSAGES_PER_REQUEST, builder.bufferSize);
@@ -99,8 +97,8 @@ public class Consumer {
         this.loadBalanceStrategy = strategy;
     }
 
-    public String getQueueUrl() {
-        return queueUrl;
+    public SqsQueue<String> getQueue() {
+        return sqsQueue;
     }
 
     public int getBufferSize() {
@@ -185,7 +183,7 @@ public class Consumer {
                 && remainingPermits.get() == maxPermits.get();
     }
 
-    void setMessageBuffer(ArrayDeque<TimedMessage> messageBuffer) {
+    void setMessageBuffer(ArrayDeque<SqsMessage<String>> messageBuffer) {
         this.messageBuffer = messageBuffer;
     }
 
@@ -218,7 +216,7 @@ public class Consumer {
         }
     }
 
-    private synchronized void addMessagesToBuffer(List<TimedMessage> messages) {
+    private synchronized void addMessagesToBuffer(List<SqsMessage<String>> messages) {
         if (!messages.isEmpty()) {
             messageBuffer.addAll(messages);
             update();
@@ -246,11 +244,11 @@ public class Consumer {
         }
     }
 
-    private synchronized TimedMessage getNextMessage() {
-        TimedMessage timedMessage = messageBuffer.pop();
+    private synchronized SqsMessage<String> getNextMessage() {
+        SqsMessage<String> message = messageBuffer.pop();
         waitingInQueue = false;
 
-        boolean expired = expirationStrategy.isExpired(timedMessage);
+        boolean expired = expirationStrategy.isExpired(message);
 
         if (expired) {
             update();
@@ -258,21 +256,17 @@ public class Consumer {
         } else {
             remainingPermits.decrementAndGet();
             update();
-            return timedMessage;
+            return message;
         }
     }
 
     void processNextMessage() {
 
-        TimedMessage timedMessage = getNextMessage();
-        if (timedMessage == null) {
+        SqsMessage<String> message = getNextMessage();
+        if (message == null) {
             return;
         }
-        Message message = timedMessage.getMessage();
-
-        SqsAsyncIoClient sqsClient = manager.getSqsClient();
-        MessageAcknowledger<Message> acknowledger =
-                new MessageAcknowledger<>(sqsClient, queueUrl, message.getReceiptHandle(), sqsClient);
+        MessageAcknowledger<String> acknowledger = new MessageAcknowledger<>(sqsQueue, message.getReceiptHandle());
 
         Completable.fromRunnable(() -> handler.handleMessage(message, acknowledger))
                 .andThen(acknowledger.getAckMode())
@@ -284,7 +278,7 @@ public class Consumer {
                         failureAverage.addData(MESSAGE_FAILURE);
                     }
                     if (ackMode == MessageAcknowledger.AckMode.RETRY) {
-                        addMessagesToBuffer(Collections.singletonList(timedMessage));
+                        addMessagesToBuffer(Collections.singletonList(message));
                     }
                 });
 
@@ -295,24 +289,23 @@ public class Consumer {
         }).subscribe();
     }
 
-    private void startNewRequest(RequestType requestType) {
-        ReceiveMessageRequest request = new ReceiveMessageRequest()
-                .withQueueUrl(queueUrl)
-                .withMaxNumberOfMessages(NUM_MESSAGES_PER_REQUEST);
-        if (requestType == RequestType.LongPolling) {
-            //long polling waits for as long as possible
-            request = request.withWaitTimeSeconds(MAX_WAIT_TIME_SECONDS);
-        } else {
-            //load balanced requests wait the minimum amount of time that guarantees they get all requests (1 second)
-            request = request.withWaitTimeSeconds(LOAD_BALANCED_REQUEST_WAIT_TIME_SECONDS);
-        }
-        manager.getSqsClient().receiveMessage(request)
-                .subscribe(new ReceiveMessageHandler(requestType));
-    }
-
     public enum RequestType {
         LongPolling,
         LoadBalanced
+    }
+
+    private void startNewRequest(RequestType requestType) {
+        Duration waitTime = getWaitTimeForRequestType(requestType);
+        sqsQueue.receiveMessages(NUM_MESSAGES_PER_REQUEST, Optional.of(waitTime))
+                .subscribe(new ReceiveMessageHandler(requestType));
+    }
+
+    private static Duration getWaitTimeForRequestType(RequestType requestType) {
+        if (requestType == RequestType.LoadBalanced) {
+            return LOAD_BALANCED_REQUEST_WAIT_TIME;
+        } else {
+            return MAX_WAIT_TIME;
+        }
     }
 
     public class UpdateTimerTask extends TimerTask {
@@ -322,7 +315,7 @@ public class Consumer {
         }
     }
 
-    public class ReceiveMessageHandler implements SingleObserver<ReceiveMessageResult> {
+    public class ReceiveMessageHandler implements SingleObserver<List<SqsMessage<String>>> {
         RequestType requestType;
 
         public ReceiveMessageHandler(RequestType requestType) {
@@ -334,26 +327,20 @@ public class Consumer {
         }
 
         @Override
-        public void onSuccess(ReceiveMessageResult result) {
-            List<TimedMessage> messages = result.getMessages().stream()
-                    .map((message) -> TimedMessage.builder()
-                            .message(message)
-                            .build()
-                    ).collect(Collectors.toList());
+        public void onSuccess(List<SqsMessage<String>> messages) {
             addMessagesToBuffer(messages);
-            updateLoadBalanceRequests(result.getMessages().size());
+            updateLoadBalanceRequests(messages.size());
             always();
         }
 
         @Override
         public void onError(Throwable exception) {
-            LOG.error("SQS receive message failed for queue [{}]", exception, queueUrl);
+            LOG.error("SQS receive message failed for queue [{}]", exception, sqsQueue.getQueueUrl());
             always();
         }
 
         @Override
-        public void onSubscribe(Disposable disposable) {
-        }
+        public void onSubscribe(Disposable disposable) {}
 
         public void always() {
             if (requestType == RequestType.LongPolling) {

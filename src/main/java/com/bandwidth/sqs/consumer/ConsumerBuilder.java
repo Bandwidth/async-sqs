@@ -1,19 +1,19 @@
 package com.bandwidth.sqs.consumer;
 
-import com.amazonaws.services.sqs.model.Message;
 import com.bandwidth.sqs.consumer.handler.ConsumerHandler;
 import com.bandwidth.sqs.consumer.strategy.backoff.BackoffStrategy;
 import com.bandwidth.sqs.consumer.strategy.backoff.NullBackoffStrategy;
 import com.bandwidth.sqs.consumer.strategy.expiration.ExpirationStrategy;
 import com.bandwidth.sqs.consumer.strategy.expiration.NeverExpiresStrategy;
+import com.bandwidth.sqs.queue.SqsQueue;
 
 public class ConsumerBuilder {
     public static final int DEFAULT_NUM_PERMITS = 500;
     public static final int DEFAULT_BUFFER_SIZE = 640;
 
     final ConsumerManager consumerManager;
-    final String queueUrl;
-    final ConsumerHandler<Message> consumerHandler;
+    final SqsQueue<String> sqsQueue;
+    final ConsumerHandler<String> consumerHandler;
 
     int numPermits = DEFAULT_NUM_PERMITS;
     int bufferSize = DEFAULT_BUFFER_SIZE;
@@ -22,14 +22,15 @@ public class ConsumerBuilder {
 
     /**
      * @param manager         A ConsumerManager that manages interactions between all of the consumers
-     * @param queueUrl        Url of the SQS Queue.
+     * @param sqsQueue        The sqsQueue
      * @param consumerHandler A handler used to process a message. The number of current messages being processed by the
      *                        handler is limited by `numPermits`. You *MUST* either `ack()` or `nack()` EVERY message
      *                        using the provided MessageAcknowledger to allow more messages to be processed.
      */
-    public ConsumerBuilder(ConsumerManager manager, String queueUrl, ConsumerHandler<Message> consumerHandler) {
+    public ConsumerBuilder(ConsumerManager manager, SqsQueue<String> sqsQueue, ConsumerHandler<String>
+            consumerHandler) {
         this.consumerManager = manager;
-        this.queueUrl = queueUrl;
+        this.sqsQueue = sqsQueue;
         this.consumerHandler = consumerHandler;
 
     }

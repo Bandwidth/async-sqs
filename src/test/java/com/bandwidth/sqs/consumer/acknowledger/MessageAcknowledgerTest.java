@@ -8,12 +8,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-import com.amazonaws.services.sqs.model.ChangeMessageVisibilityResult;
-import com.amazonaws.services.sqs.model.DeleteMessageResult;
 import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.SendMessageResult;
-import com.bandwidth.sqs.client.SqsAsyncIoClient;
-import com.bandwidth.sqs.publisher.MessagePublisher;
+import com.bandwidth.sqs.queue.SqsQueue;
 
 import org.junit.Test;
 
@@ -24,66 +20,61 @@ import io.reactivex.Single;
 
 @SuppressWarnings("unchecked")
 public class MessageAcknowledgerTest {
-    private static final String QUEUE_URL = "http://domain.com/path";
     private static final String RECEIPT_ID = "123-adfg-w4-dfga-346-zfg";
     private static final String MESSAGE_ID = "message-id-q4tqeeg";
+    private static final String MESSAGE = "message body";
 
-    private final SqsAsyncIoClient sqsAsyncIoClientMock = mock(SqsAsyncIoClient.class);
-    private final MessagePublisher messagePublisherMock = mock(MessagePublisher.class);
-    private final Message message = new Message().withBody("body");
-
-    private final MessageAcknowledger<Message> messageAcknowledger =
-            new MessageAcknowledger(sqsAsyncIoClientMock, QUEUE_URL, RECEIPT_ID, messagePublisherMock);
+    private final SqsQueue<String> sqsQueueMock = mock(SqsQueue.class);
+    private final SqsQueue<Object> sqsObjectQueueMock = mock(SqsQueue.class);
+    private final MessageAcknowledger<String> messageAcknowledger = new MessageAcknowledger(sqsQueueMock, RECEIPT_ID);
 
     public MessageAcknowledgerTest() {
-        when(sqsAsyncIoClientMock.deleteMessage(any())).thenReturn(Single.just(mock(DeleteMessageResult.class)));
-        when(sqsAsyncIoClientMock.changeMessageVisibility(any()))
-                .thenReturn(Single.just(mock(ChangeMessageVisibilityResult.class)));
-        when(messagePublisherMock.publishMessage(any(), any(), any()))
-                .thenReturn(Single.just(MESSAGE_ID));
+        when(sqsQueueMock.deleteMessage(any(String.class))).thenReturn(Completable.complete());
+        when(sqsQueueMock.changeMessageVisibility(any(String.class), any())).thenReturn(Completable.complete());
+        when(sqsQueueMock.publishMessage(any(), any())).thenReturn(Single.just(MESSAGE_ID));
     }
 
     @Test
     public void testDelete() {
         messageAcknowledger.delete();
-        verify(sqsAsyncIoClientMock).deleteMessage(any());
+        verify(sqsQueueMock).deleteMessage(any(String.class));
         assertCompletedMode(MessageAcknowledger.AckMode.DELETE);
     }
 
     @Test
     public void testIgnore() {
         messageAcknowledger.ignore();
-        verifyZeroInteractions(sqsAsyncIoClientMock);
+        verifyZeroInteractions(sqsQueueMock);
         assertCompletedMode(MessageAcknowledger.AckMode.IGNORE);
     }
 
     @Test
     public void testRetry() {
         messageAcknowledger.retry();
-        verifyZeroInteractions(sqsAsyncIoClientMock);
+        verifyZeroInteractions(sqsQueueMock);
         assertCompletedMode(MessageAcknowledger.AckMode.RETRY);
     }
 
     @Test
     public void testDelay() {
         messageAcknowledger.delay(Duration.ZERO);
-        verify(sqsAsyncIoClientMock).changeMessageVisibility(any());
+        verify(sqsQueueMock).changeMessageVisibility(any(String.class), any());
         assertCompletedMode(MessageAcknowledger.AckMode.DELAY);
     }
 
     @Test
     public void testModify() {
-        messageAcknowledger.replace(message, Duration.ZERO);
-        verify(messagePublisherMock).publishMessage(any(), any(), any());
-        verify(sqsAsyncIoClientMock).deleteMessage(any());
+        messageAcknowledger.replace(MESSAGE);
+        verify(sqsQueueMock).publishMessage(any(), any());
+        verify(sqsQueueMock).deleteMessage(any(String.class));
         assertCompletedMode(MessageAcknowledger.AckMode.MODIFY);
     }
 
     @Test
     public void testTransfer() {
-        messageAcknowledger.transfer(message, QUEUE_URL, Duration.ZERO);
-        verify(messagePublisherMock).publishMessage(any(), any(), any());
-        verify(sqsAsyncIoClientMock).deleteMessage(any());
+        messageAcknowledger.transfer(MESSAGE, sqsQueueMock);
+        verify(sqsQueueMock).publishMessage(any(), any());
+        verify(sqsQueueMock).deleteMessage(any(String.class));
         assertCompletedMode(MessageAcknowledger.AckMode.TRANSFER);
     }
 
@@ -95,6 +86,18 @@ public class MessageAcknowledgerTest {
         assertThat(MessageAcknowledger.AckMode.RETRY.isSuccessful()).isFalse();
         assertThat(MessageAcknowledger.AckMode.MODIFY.isSuccessful()).isFalse();
         assertThat(MessageAcknowledger.AckMode.DELAY.isSuccessful()).isFalse();
+    }
+
+    @Test
+    public void testDelegation() {
+        MessageAcknowledger<Object> customAcker = new MessageAcknowledger<>(messageAcknowledger, sqsObjectQueueMock);
+        customAcker.ignore();
+
+        customAcker.getAckMode().test().assertValue(MessageAcknowledger.AckMode.IGNORE);
+        messageAcknowledger.getAckMode().test().assertValue(MessageAcknowledger.AckMode.IGNORE);
+
+        customAcker.getCompletable().test().assertComplete();
+        messageAcknowledger.getCompletable().test().assertComplete();
     }
 
     private void assertCompletedMode(MessageAcknowledger.AckMode mode) {

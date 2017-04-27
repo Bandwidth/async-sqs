@@ -1,6 +1,5 @@
 package com.bandwidth.sqs.consumer;
 
-import com.bandwidth.sqs.client.SqsAsyncIoClient;
 import com.bandwidth.sqs.consumer.strategy.loadbalance.LoadBalanceStrategy.Action;
 
 import org.slf4j.Logger;
@@ -39,7 +38,6 @@ public class ConsumerManager {
     private int currentGlobalAllocatedRequests;
     private final int maxGlobalAllocatedRequests;
     private final ExecutorService threadPool;
-    private final SqsAsyncIoClient sqsClient;
 
     /**
      * @param maxLoadBalancedRequests This should be the number of concurrent in-flight requests needed to fully
@@ -51,16 +49,10 @@ public class ConsumerManager {
      *                                starting value, 64 can saturate a 100 mbps network with small message payloads and
      *                                a ~40ms round-trip latency.
      * @param threadPool              An executor used to process consumer handlers
-     * @param sqsClient               The SqsClient used to send requests. BufferedSqsAsyncIoClient is suggested
      */
-    public ConsumerManager(int maxLoadBalancedRequests, ExecutorService threadPool, SqsAsyncIoClient sqsClient) {
-        this.sqsClient = sqsClient;
+    public ConsumerManager(int maxLoadBalancedRequests, ExecutorService threadPool) {
         this.threadPool = threadPool;
         this.maxGlobalAllocatedRequests = maxLoadBalancedRequests;
-    }
-
-    public SqsAsyncIoClient getSqsClient() {
-        return sqsClient;
     }
 
     public synchronized void addConsumer(Consumer consumer) {
