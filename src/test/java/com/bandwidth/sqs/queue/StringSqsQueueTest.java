@@ -28,7 +28,7 @@ import java.util.Optional;
 import io.reactivex.Single;
 
 @SuppressWarnings("unchecked")
-public class DefaultSqsQueueTest {
+public class StringSqsQueueTest {
     private static final String QUEUE_URL = "https://domain.com/path";
     private static final String MESSAGE_ID = "message-id";
     private static final String MESSAGE_BODY = "message-body";
@@ -46,12 +46,12 @@ public class DefaultSqsQueueTest {
     private KeyedTaskBuffer<String, ChangeMessageVisibilityEntry> changeMessageVisibilityTaskBufferMock =
             mock(KeyedTaskBuffer.class);
 
-    private final DefaultSqsQueue queue = new DefaultSqsQueue(QUEUE_URL, requestSenderMock,
+    private final StringSqsQueue queue = new StringSqsQueue(QUEUE_URL, requestSenderMock,
             CLIENT_CONFIG, Optional.of(ATTRIBUTES));
-    private final SqsQueue<String> queueWithoutAttributes = new DefaultSqsQueue(QUEUE_URL, requestSenderMock,
+    private final SqsQueue<String> queueWithoutAttributes = new StringSqsQueue(QUEUE_URL, requestSenderMock,
             CLIENT_CONFIG, Optional.empty());
 
-    public DefaultSqsQueueTest() {
+    public StringSqsQueueTest() {
         queue.setSendMessageTaskBuffer(sendMessageTaskBufferMock);
         queue.setDeleteMessageTaskBuffer(deleteMessageTaskBufferMock);
         queue.setChangeMessageVisibilityTaskBuffer(changeMessageVisibilityTaskBufferMock);

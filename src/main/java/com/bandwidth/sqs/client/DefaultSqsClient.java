@@ -5,28 +5,35 @@ import com.amazonaws.services.sqs.model.AmazonSQSException;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.bandwidth.sqs.actions.CreateQueueAction;
 import com.bandwidth.sqs.actions.GetQueueUrlAction;
-import com.bandwidth.sqs.queue.DefaultSqsQueue;
+import com.bandwidth.sqs.queue.SerializingSqsQueue;
 import com.bandwidth.sqs.queue.SqsQueue;
 import com.bandwidth.sqs.queue.SqsQueueClientConfig;
 import com.bandwidth.sqs.queue.SqsQueueConfig;
+import com.bandwidth.sqs.queue.StringSqsQueue;
 import com.bandwidth.sqs.request_sender.SqsRequestSender;
 
 import java.util.Optional;
 
 import io.reactivex.Single;
+import io.reactivex.functions.Function;
 
-public class DefaultSqsClient implements SqsClient {
+public class DefaultSqsClient<T> implements SqsClient<T> {
 
     private static final String QUEUE_ALREADY_EXISTS = "QueueAlreadyExists";
 
     private final SqsRequestSender requestSender;
+    public final Function<String, T> deserialize;
+    public final Function<T, String> serialize;
 
-    public DefaultSqsClient(SqsRequestSender requestSender) {
+    public DefaultSqsClient(SqsRequestSender requestSender, Function<String, T> deserialize,
+            Function<T, String> serialize) {
         this.requestSender = requestSender;
+        this.deserialize = deserialize;
+        this.serialize = serialize;
     }
 
     @Override
-    public Single<SqsQueue<String>> getQueueFromName(String queueName, Regions region,
+    public Single<SqsQueue<T>> getQueueFromName(String queueName, Regions region,
             SqsQueueClientConfig clientConfig) {
         GetQueueUrlAction action = new GetQueueUrlAction(queueName, region);
         return requestSender.sendRequest(action)
@@ -35,17 +42,19 @@ public class DefaultSqsClient implements SqsClient {
     }
 
     @Override
-    public SqsQueue<String> getQueueFromUrl(String queueUrl, SqsQueueClientConfig clientConfig) {
-        return new DefaultSqsQueue(queueUrl, requestSender, clientConfig, Optional.empty());
+    public SqsQueue<T> getQueueFromUrl(String queueUrl, SqsQueueClientConfig clientConfig) {
+        SqsQueue<String> rawQueue = new StringSqsQueue(queueUrl, requestSender, clientConfig, Optional.empty());
+        return new SerializingSqsQueue<>(rawQueue, deserialize, serialize);
     }
 
     @Override
-    public Single<SqsQueue<String>> assertQueue(SqsQueueConfig queueConfig, SqsQueueClientConfig clientConfig) {
+    public Single<SqsQueue<T>> assertQueue(SqsQueueConfig queueConfig, SqsQueueClientConfig clientConfig) {
         CreateQueueAction action = new CreateQueueAction(queueConfig);
-        Single<SqsQueue<String>> output = requestSender.sendRequest(action).map(createQueueResult ->
-                new DefaultSqsQueue(createQueueResult.getQueueUrl(), requestSender, clientConfig,
-                        Optional.of(queueConfig.getAttributes()))
-        );
+        Single<SqsQueue<T>> output = requestSender.sendRequest(action).map(createQueueResult -> {
+            SqsQueue<String> rawQueue = new StringSqsQueue(createQueueResult.getQueueUrl(), requestSender,
+                    clientConfig, Optional.of(queueConfig.getAttributes()));
+            return new SerializingSqsQueue<>(rawQueue, deserialize, serialize);
+        });
         return output.onErrorResumeNext((err) -> {
             if (err instanceof AmazonSQSException) {
                 AmazonSQSException awsException = (AmazonSQSException) err;

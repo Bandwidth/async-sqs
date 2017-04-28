@@ -24,6 +24,7 @@ import com.bandwidth.sqs.request_sender.SqsRequestSender;
 import org.junit.Test;
 
 import io.reactivex.Single;
+import io.reactivex.functions.Function;
 
 public class DefaultSqsClientTest {
     private static final AmazonSQSException QUEUE_ALREADY_EXISTS_EXCEPTION = new AmazonSQSException("");
@@ -36,11 +37,12 @@ public class DefaultSqsClientTest {
             .attributes(ATTRIBUTES)
             .region(Regions.US_EAST_1)
             .build();
-
+    private static final Function<String, String> NOOP_SERIALIZER = (str) -> str;
 
     private final SqsRequestSender requestSenderMock = mock(SqsRequestSender.class);
 
-    private final DefaultSqsClient client = new DefaultSqsClient(requestSenderMock);
+    private final DefaultSqsClient<String> client =
+            new DefaultSqsClient<>(requestSenderMock, NOOP_SERIALIZER, NOOP_SERIALIZER);
 
     public DefaultSqsClientTest() {
         QUEUE_ALREADY_EXISTS_EXCEPTION.setErrorCode(QUEUE_ALREADY_EXISTS);

@@ -16,7 +16,7 @@ public class ConstantExpirationStrategy implements ExpirationStrategy {
     }
 
     @Override
-    public boolean isExpired(SqsMessage<String> timedMessage) {
+    public boolean isExpired(SqsMessage<?> timedMessage) {
         Duration timeUntilExpiration = maxAge.minus(timedMessage.getMessageAge());
         return timeUntilExpiration.isNegative();
     }

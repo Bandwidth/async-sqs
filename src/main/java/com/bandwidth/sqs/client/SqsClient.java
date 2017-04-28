@@ -10,7 +10,7 @@ import java.text.MessageFormat;
 
 import io.reactivex.Single;
 
-public interface SqsClient {
+public interface SqsClient<T> {
 
     /**
      * @param queueName    Name of the SQS queue. This queue must already exist, it will not be created.
@@ -18,7 +18,7 @@ public interface SqsClient {
      * @param clientConfig Configuration values for the queue client
      * @return an SqsQueue
      */
-    Single<SqsQueue<String>> getQueueFromName(String queueName, Regions region, SqsQueueClientConfig clientConfig);
+    Single<SqsQueue<T>> getQueueFromName(String queueName, Regions region, SqsQueueClientConfig clientConfig);
 
     /**
      * Gets an SqsQueue object from a queueUrl. Note this does not do any HTTP requests and returns instantly.
@@ -27,7 +27,7 @@ public interface SqsClient {
      * @param clientConfig Configuration values for the queue client
      * @return an SqsQueue
      */
-    SqsQueue<String> getQueueFromUrl(String queueUrl, SqsQueueClientConfig clientConfig);
+    SqsQueue<T> getQueueFromUrl(String queueUrl, SqsQueueClientConfig clientConfig);
 
     /**
      * Asserts that an SQS queue exists with specific attributes. The queue is created if it does not exist,
@@ -37,14 +37,14 @@ public interface SqsClient {
      * @param clientConfig Configuration of the SQS client
      * @return an SqsQueue
      */
-    Single<SqsQueue<String>> assertQueue(SqsQueueConfig queueConfig, SqsQueueClientConfig clientConfig);
+    Single<SqsQueue<T>> assertQueue(SqsQueueConfig queueConfig, SqsQueueClientConfig clientConfig);
 
     /**
      * @param queueName Name of the SQS queue. This queue must already exist, it will not be created.
      * @param region    Region this queue exists in
      * @return an SqsQueue
      */
-    default Single<SqsQueue<String>> getQueueFromName(String queueName, Regions region) {
+    default Single<SqsQueue<T>> getQueueFromName(String queueName, Regions region) {
         return getQueueFromName(queueName, region, SqsQueueClientConfig.builder().build());
     }
 
@@ -54,7 +54,7 @@ public interface SqsClient {
      * @param queueUrl Full url of the SQS queue
      * @return an SqsQueue
      */
-    default SqsQueue<String> getQueueFromUrl(String queueUrl) {
+    default SqsQueue<T> getQueueFromUrl(String queueUrl) {
         return getQueueFromUrl(queueUrl, SqsQueueClientConfig.builder().build());
     }
 
@@ -65,7 +65,7 @@ public interface SqsClient {
      * @param queueConfig Configuration of the SQS queue
      * @return an SqsQueue
      */
-    default Single<SqsQueue<String>> assertQueue(SqsQueueConfig queueConfig) {
+    default Single<SqsQueue<T>> assertQueue(SqsQueueConfig queueConfig) {
         return assertQueue(queueConfig, ImmutableSqsQueueClientConfig.builder().build());
     }
 
@@ -73,7 +73,8 @@ public interface SqsClient {
         return MessageFormat.format("https://sqs.{0}.amazonaws.com/", region.getName());
     }
 
-    static SqsClientBuilder builder() {
-        return new SqsClientBuilder();
+    static SqsClientBuilder<String> builder() {
+        //default builder has "no-op" serializers
+        return new SqsClientBuilder<>((str) -> str, (str) -> str);
     }
 }

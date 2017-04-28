@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import io.reactivex.Completable;
 import io.reactivex.Single;
 
-public class DefaultSqsQueue implements SqsQueue<String> {
+public class StringSqsQueue implements SqsQueue<String> {
     public static final int MAX_BUFFER_SIZE = 10;
 
     private final String queueUrl;
@@ -37,7 +37,7 @@ public class DefaultSqsQueue implements SqsQueue<String> {
     private KeyedTaskBuffer<String, DeleteMessageEntry> deleteMessageTaskBuffer;
     private KeyedTaskBuffer<String, ChangeMessageVisibilityEntry> changeMessageVisibilityTaskBuffer;
 
-    public DefaultSqsQueue(String queueUrl, SqsRequestSender requestSender, SqsQueueClientConfig clientConfig,
+    public StringSqsQueue(String queueUrl, SqsRequestSender requestSender, SqsQueueClientConfig clientConfig,
             Optional<SqsQueueAttributes> queueAttributes) {
         this.queueUrl = queueUrl;
         this.requestSender = requestSender;
