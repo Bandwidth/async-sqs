@@ -26,8 +26,17 @@ public interface SqsQueue<T> extends MessagePublisher<T> {
 
     Completable setAttributes(SqsQueueAttributes newAttributes);
 
+    default Single<List<SqsMessage<T>>> receiveMessages(int maxMessages, Duration waitTime, Duration
+            visibilityTimeout) {
+        return receiveMessages(maxMessages, Optional.ofNullable(waitTime), Optional.ofNullable(visibilityTimeout));
+    }
+
     default Single<List<SqsMessage<T>>> receiveMessages(int maxMessages, Optional<Duration> waitTime) {
         return receiveMessages(maxMessages, waitTime, Optional.empty());
+    }
+
+    default Single<List<SqsMessage<T>>> receiveMessages(int maxMessages, Duration waitTime) {
+        return receiveMessages(maxMessages, Optional.ofNullable(waitTime), Optional.empty());
     }
 
     default Single<List<SqsMessage<T>>> receiveMessages(int maxMessages) {
