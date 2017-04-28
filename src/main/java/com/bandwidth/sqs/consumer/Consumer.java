@@ -69,10 +69,10 @@ public class Consumer<T> {
     private boolean shuttingDown = false;
 
     /**
-     * Adds a consumer for a specific SQS DefaultSqsQueue. Once a consumer is started, the handler will be called
+     * Adds a consumer for a specific SQS Queue. Once a consumer is started, the handler will be called
      * from a thread-pool to process messages. It is safe to use blocking calls in the handler as
      * this will not impact performance if a sufficient number of `workerThreads` are configured in the ConsumerManager.
-     * Only one consumer is normally needed per SQS DefaultSqsQueue. A single long-polling request is always in-flight
+     * Only one consumer is normally needed per SQS Queue. A single long-polling request is always in-flight
      * for each consumer in addition to the load-balanced requests configured in the `ConsumerManager`.
      */
     public Consumer(ConsumerBuilder builder) {

@@ -48,7 +48,7 @@ public class DefaultSqsClient<T> implements SqsClient<T> {
     }
 
     @Override
-    public Single<SqsQueue<T>> assertQueue(SqsQueueConfig queueConfig, SqsQueueClientConfig clientConfig) {
+    public Single<SqsQueue<T>> upsertQueue(SqsQueueConfig queueConfig, SqsQueueClientConfig clientConfig) {
         CreateQueueAction action = new CreateQueueAction(queueConfig);
         Single<SqsQueue<T>> output = requestSender.sendRequest(action).map(createQueueResult -> {
             SqsQueue<String> rawQueue = new StringSqsQueue(createQueueResult.getQueueUrl(), requestSender,

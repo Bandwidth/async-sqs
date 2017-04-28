@@ -75,7 +75,7 @@ public class DefaultSqsClientTest {
                 new CreateQueueResult().withQueueUrl(QUEUE_URL)
         ));
 
-        SqsQueue<String> queue = client.assertQueue(QUEUE_CONFIG).blockingGet();
+        SqsQueue<String> queue = client.upsertQueue(QUEUE_CONFIG).blockingGet();
         assertThat(queue.getQueueUrl()).isEqualTo(QUEUE_URL);
         assertThat(queue.getAttributes().blockingGet()).isEqualTo(ATTRIBUTES);
         verify(requestSenderMock).sendRequest(any(CreateQueueAction.class));
@@ -88,7 +88,7 @@ public class DefaultSqsClientTest {
                 QUEUE_ALREADY_EXISTS_EXCEPTION
         ));
 
-        SqsQueue<String> queue = client.assertQueue(QUEUE_CONFIG).blockingGet();
+        SqsQueue<String> queue = client.upsertQueue(QUEUE_CONFIG).blockingGet();
         assertThat(queue.getQueueUrl()).isEqualTo(QUEUE_URL);
         assertThat(queue.getAttributes().blockingGet()).isEqualTo(ATTRIBUTES);
         verify(requestSenderMock).sendRequest(any(CreateQueueAction.class));
@@ -103,7 +103,7 @@ public class DefaultSqsClientTest {
                 new RuntimeException("Unknown error")
         ));
 
-        client.assertQueue(QUEUE_CONFIG).test().assertError(RuntimeException.class);
+        client.upsertQueue(QUEUE_CONFIG).test().assertError(RuntimeException.class);
         verify(requestSenderMock).sendRequest(any(CreateQueueAction.class));
     }
 
@@ -113,7 +113,7 @@ public class DefaultSqsClientTest {
                 new AmazonSQSException("Unknown error")
         ));
 
-        client.assertQueue(QUEUE_CONFIG).test().assertError(RuntimeException.class);
+        client.upsertQueue(QUEUE_CONFIG).test().assertError(RuntimeException.class);
         verify(requestSenderMock).sendRequest(any(CreateQueueAction.class));
     }
 }
