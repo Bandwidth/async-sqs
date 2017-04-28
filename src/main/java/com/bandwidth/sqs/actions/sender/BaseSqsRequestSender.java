@@ -1,4 +1,4 @@
-package com.bandwidth.sqs.request_sender;
+package com.bandwidth.sqs.actions.sender;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;

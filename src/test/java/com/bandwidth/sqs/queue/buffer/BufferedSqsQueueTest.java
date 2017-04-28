@@ -1,4 +1,4 @@
-package com.bandwidth.sqs.queue;
+package com.bandwidth.sqs.queue.buffer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -13,11 +13,16 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.bandwidth.sqs.actions.GetQueueAttributesAction;
 import com.bandwidth.sqs.actions.ReceiveMessagesAction;
-import com.bandwidth.sqs.queue.buffer.entry.ChangeMessageVisibilityEntry;
-import com.bandwidth.sqs.queue.buffer.entry.DeleteMessageEntry;
-import com.bandwidth.sqs.queue.buffer.entry.SendMessageEntry;
-import com.bandwidth.sqs.queue.buffer.task_buffer.KeyedTaskBuffer;
-import com.bandwidth.sqs.request_sender.SqsRequestSender;
+import com.bandwidth.sqs.queue.SqsMessage;
+import com.bandwidth.sqs.queue.SqsQueue;
+import com.bandwidth.sqs.queue.SqsQueueAttributes;
+import com.bandwidth.sqs.queue.SqsQueueClientConfig;
+import com.bandwidth.sqs.queue.buffer.BufferedSqsQueue;
+import com.bandwidth.sqs.queue.entry.ChangeMessageVisibilityEntry;
+import com.bandwidth.sqs.queue.entry.DeleteMessageEntry;
+import com.bandwidth.sqs.queue.entry.SendMessageEntry;
+import com.bandwidth.sqs.queue.buffer.KeyedTaskBuffer;
+import com.bandwidth.sqs.actions.sender.SqsRequestSender;
 
 import org.junit.Test;
 
@@ -28,7 +33,7 @@ import java.util.Optional;
 import io.reactivex.Single;
 
 @SuppressWarnings("unchecked")
-public class DefaultSqsQueueTest {
+public class BufferedSqsQueueTest {
     private static final String QUEUE_URL = "https://domain.com/path";
     private static final String MESSAGE_ID = "message-id";
     private static final String MESSAGE_BODY = "message-body";
@@ -46,12 +51,12 @@ public class DefaultSqsQueueTest {
     private KeyedTaskBuffer<String, ChangeMessageVisibilityEntry> changeMessageVisibilityTaskBufferMock =
             mock(KeyedTaskBuffer.class);
 
-    private final DefaultSqsQueue queue = new DefaultSqsQueue(QUEUE_URL, requestSenderMock,
+    private final BufferedSqsQueue queue = new BufferedSqsQueue(QUEUE_URL, requestSenderMock,
             CLIENT_CONFIG, Optional.of(ATTRIBUTES));
-    private final SqsQueue<String> queueWithoutAttributes = new DefaultSqsQueue(QUEUE_URL, requestSenderMock,
+    private final SqsQueue<String> queueWithoutAttributes = new BufferedSqsQueue(QUEUE_URL, requestSenderMock,
             CLIENT_CONFIG, Optional.empty());
 
-    public DefaultSqsQueueTest() {
+    public BufferedSqsQueueTest() {
         queue.setSendMessageTaskBuffer(sendMessageTaskBufferMock);
         queue.setDeleteMessageTaskBuffer(deleteMessageTaskBufferMock);
         queue.setChangeMessageVisibilityTaskBuffer(changeMessageVisibilityTaskBufferMock);

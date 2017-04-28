@@ -19,10 +19,8 @@ import java.util.concurrent.ExecutorService;
  * requests, and managing threads the process messages retrieved by the consumers.
  */
 
-public class ConsumerManager {
-    private static final Logger LOG = LoggerFactory.getLogger(ConsumerManager.class);
-
-    private final Map<Consumer, Integer> allocatedInFlightRequests = new HashMap<>();
+public class SqsConsumerManager {
+    private final Map<SqsConsumer, Integer> allocatedInFlightRequests = new HashMap<>();
     private Timer timer = new Timer();
 
     /**
@@ -31,7 +29,7 @@ public class ConsumerManager {
      * consumers are eligible to steal requests from the consumer with most requests,
      * to evenly consume from queues.
      */
-    private final PriorityQueue<Consumer> consumersOrderedByRequests =
+    private final PriorityQueue<SqsConsumer> consumersOrderedByRequests =
             new PriorityQueue<>((o1, o2) ->
                     getAllocatedInFlightRequestsCount(o2) - getAllocatedInFlightRequestsCount(o1));
 
@@ -50,16 +48,16 @@ public class ConsumerManager {
      *                                a ~40ms round-trip latency.
      * @param threadPool              An executor used to process consumer handlers
      */
-    public ConsumerManager(int maxLoadBalancedRequests, ExecutorService threadPool) {
+    public SqsConsumerManager(int maxLoadBalancedRequests, ExecutorService threadPool) {
         this.threadPool = threadPool;
         this.maxGlobalAllocatedRequests = maxLoadBalancedRequests;
     }
 
-    public synchronized void addConsumer(Consumer consumer) {
+    public synchronized void addConsumer(SqsConsumer consumer) {
         consumersOrderedByRequests.add(consumer);
     }
 
-    public synchronized void removeConsumer(Consumer consumer) {
+    public synchronized void removeConsumer(SqsConsumer consumer) {
         int allocatedRequests = getAllocatedInFlightRequestsCount(consumer);
         setAllocatedInFlightRequests(consumer, 0);
         currentGlobalAllocatedRequests -= allocatedRequests;
@@ -70,11 +68,11 @@ public class ConsumerManager {
         return currentGlobalAllocatedRequests;
     }
 
-    public synchronized int getAllocatedInFlightRequestsCount(Consumer consumer) {
+    public synchronized int getAllocatedInFlightRequestsCount(SqsConsumer consumer) {
         return Optional.ofNullable(allocatedInFlightRequests.get(consumer)).orElse(0);
     }
 
-    public synchronized void updateAllocatedInFlightRequests(Consumer consumer, Update update) {
+    public synchronized void updateAllocatedInFlightRequests(SqsConsumer consumer, Update update) {
         Action action = update.getAction(getAllocatedInFlightRequestsCount(consumer));
         if (action == Action.Decrease) {
             decreaseAllocatedInFlightRequests(consumer);
@@ -91,13 +89,13 @@ public class ConsumerManager {
         timer.schedule(task, delay.toMillis());
     }
 
-    private synchronized void setAllocatedInFlightRequests(Consumer consumer, int numRequests) {
+    private synchronized void setAllocatedInFlightRequests(SqsConsumer consumer, int numRequests) {
         consumersOrderedByRequests.remove(consumer);
         allocatedInFlightRequests.put(consumer, numRequests);
         consumersOrderedByRequests.add(consumer);
     }
 
-    private synchronized void decreaseAllocatedInFlightRequests(Consumer consumer) {
+    private synchronized void decreaseAllocatedInFlightRequests(SqsConsumer consumer) {
         int previousValue = getAllocatedInFlightRequestsCount(consumer);
         if (previousValue > 0) {
             currentGlobalAllocatedRequests -= 1;
@@ -105,12 +103,12 @@ public class ConsumerManager {
         }
     }
 
-    private synchronized void increaseAllocatedInFlightRequests(Consumer consumer) {
+    private synchronized void increaseAllocatedInFlightRequests(SqsConsumer consumer) {
         if (currentGlobalAllocatedRequests < maxGlobalAllocatedRequests) {
             setAllocatedInFlightRequests(consumer, getAllocatedInFlightRequestsCount(consumer) + 1);
             currentGlobalAllocatedRequests += 1;
         } else { //there are no free requests left, try to balance consumers by taking from the "largest" consumer
-            Consumer largestConsumer = consumersOrderedByRequests.peek();
+            SqsConsumer largestConsumer = consumersOrderedByRequests.peek();
             int smallerConsumerAllocatedRequests = getAllocatedInFlightRequestsCount(consumer);
             int largestConsumerAllocatedRequests = getAllocatedInFlightRequestsCount(largestConsumer);
             if (largestConsumerAllocatedRequests - smallerConsumerAllocatedRequests >= 2) {

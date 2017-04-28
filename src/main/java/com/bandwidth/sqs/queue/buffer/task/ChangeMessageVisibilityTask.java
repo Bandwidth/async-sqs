@@ -1,9 +1,8 @@
 package com.bandwidth.sqs.queue.buffer.task;
 
 import com.bandwidth.sqs.actions.ChangeMessageVisibilityBatchAction;
-import com.bandwidth.sqs.queue.buffer.entry.ChangeMessageVisibilityEntry;
-import com.bandwidth.sqs.queue.buffer.task_buffer.Task;
-import com.bandwidth.sqs.request_sender.SqsRequestSender;
+import com.bandwidth.sqs.queue.entry.ChangeMessageVisibilityEntry;
+import com.bandwidth.sqs.actions.sender.SqsRequestSender;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,17 +14,12 @@ public class ChangeMessageVisibilityTask implements Task<String, ChangeMessageVi
 
     private final SqsRequestSender requestSender;
 
-    public ChangeMessageVisibilityTask(SqsRequestSender requestSender){
+    public ChangeMessageVisibilityTask(SqsRequestSender requestSender) {
         this.requestSender = requestSender;
     }
 
     @Override
-    public void run(String queueUrl, List<ChangeMessageVisibilityEntry> entries) {
-        Map<String, ChangeMessageVisibilityEntry> entryMap = new HashMap<>();
-        IntStream.range(0, entries.size()).forEach((id) -> {
-            entryMap.put(Integer.toString(id), entries.get(id));
-        });
-
+    public void run(String queueUrl, Map<String, ChangeMessageVisibilityEntry> entryMap) {
         ChangeMessageVisibilityBatchAction action = new ChangeMessageVisibilityBatchAction(queueUrl, entryMap);
 
         requestSender.sendRequest(action).subscribe((result) -> {
@@ -40,7 +34,7 @@ public class ChangeMessageVisibilityTask implements Task<String, ChangeMessageVi
                         });
             });
         }, (err) -> {//the entire batch operation failed
-            entries.forEach((entry) -> entry.getResultSubject().onError(err));
+            entryMap.values().forEach((entry) -> entry.getResultSubject().onError(err));
         });
     }
 }

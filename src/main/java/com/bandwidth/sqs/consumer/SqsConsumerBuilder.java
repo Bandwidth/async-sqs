@@ -7,11 +7,11 @@ import com.bandwidth.sqs.consumer.strategy.expiration.ExpirationStrategy;
 import com.bandwidth.sqs.consumer.strategy.expiration.NeverExpiresStrategy;
 import com.bandwidth.sqs.queue.SqsQueue;
 
-public class ConsumerBuilder {
+public class SqsConsumerBuilder {
     public static final int DEFAULT_NUM_PERMITS = 500;
     public static final int DEFAULT_BUFFER_SIZE = 640;
 
-    final ConsumerManager consumerManager;
+    final SqsConsumerManager consumerManager;
     final SqsQueue<String> sqsQueue;
     final ConsumerHandler<String> consumerHandler;
 
@@ -21,13 +21,13 @@ public class ConsumerBuilder {
     ExpirationStrategy expirationStrategy = new NeverExpiresStrategy();
 
     /**
-     * @param manager         A ConsumerManager that manages interactions between all of the consumers
+     * @param manager         A SqsConsumerManager that manages interactions between all of the consumers
      * @param sqsQueue        The sqsQueue
      * @param consumerHandler A handler used to process a message. The number of current messages being processed by the
      *                        handler is limited by `numPermits`. You *MUST* either `ack()` or `nack()` EVERY message
      *                        using the provided MessageAcknowledger to allow more messages to be processed.
      */
-    public ConsumerBuilder(ConsumerManager manager, SqsQueue<String> sqsQueue, ConsumerHandler<String>
+    public SqsConsumerBuilder(SqsConsumerManager manager, SqsQueue<String> sqsQueue, ConsumerHandler<String>
             consumerHandler) {
         this.consumerManager = manager;
         this.sqsQueue = sqsQueue;
@@ -36,15 +36,15 @@ public class ConsumerBuilder {
     }
 
 
-    public Consumer build() {
-        return new Consumer(this);
+    public SqsConsumer build() {
+        return new SqsConsumer(this);
     }
 
     /**
      * @param numPermits Max number of concurrent requests this consumer can process. A permit is consumed when the
      *                   handler is called, and released when the message is acked or nacked.
      */
-    public ConsumerBuilder withNumPermits(int numPermits) {
+    public SqsConsumerBuilder withNumPermits(int numPermits) {
         this.numPermits = numPermits;
         return this;
     }
@@ -58,7 +58,7 @@ public class ConsumerBuilder {
      *                   processing finishes causing duplicate messages. The maximum number of in-flight HTTP requests
      *                   is limited to max(1, floor(maxQueueSize/10))
      */
-    public ConsumerBuilder withBufferSize(int bufferSize) {
+    public SqsConsumerBuilder withBufferSize(int bufferSize) {
         this.bufferSize = bufferSize;
         return this;
     }
@@ -66,7 +66,7 @@ public class ConsumerBuilder {
     /**
      * @param backoffStrategy backoff strategy to use for this consumer
      */
-    public ConsumerBuilder withBackoffStrategy(BackoffStrategy backoffStrategy) {
+    public SqsConsumerBuilder withBackoffStrategy(BackoffStrategy backoffStrategy) {
         this.backoffStrategy = backoffStrategy;
         return this;
     }
@@ -74,7 +74,7 @@ public class ConsumerBuilder {
     /**
      * @param expirationStrategy Strategy to determine if a message has expired before it is processed
      */
-    public ConsumerBuilder withExpirationStrategy(ExpirationStrategy expirationStrategy) {
+    public SqsConsumerBuilder withExpirationStrategy(ExpirationStrategy expirationStrategy) {
         this.expirationStrategy = expirationStrategy;
         return this;
     }

@@ -19,13 +19,13 @@ import com.bandwidth.sqs.actions.SetQueueAttributesAction;
 import com.bandwidth.sqs.queue.SqsQueue;
 import com.bandwidth.sqs.queue.SqsQueueAttributes;
 import com.bandwidth.sqs.queue.SqsQueueConfig;
-import com.bandwidth.sqs.request_sender.SqsRequestSender;
+import com.bandwidth.sqs.actions.sender.SqsRequestSender;
 
 import org.junit.Test;
 
 import io.reactivex.Single;
 
-public class DefaultSqsClientTest {
+public class SqsClientTest {
     private static final AmazonSQSException QUEUE_ALREADY_EXISTS_EXCEPTION = new AmazonSQSException("");
     private static final String QUEUE_ALREADY_EXISTS = "QueueAlreadyExists";
     private static final String QUEUE_URL = "https://domain.com/12345/queue-name";
@@ -40,9 +40,9 @@ public class DefaultSqsClientTest {
 
     private final SqsRequestSender requestSenderMock = mock(SqsRequestSender.class);
 
-    private final DefaultSqsClient client = new DefaultSqsClient(requestSenderMock);
+    private final SqsClient client = new SqsClient(requestSenderMock);
 
-    public DefaultSqsClientTest() {
+    public SqsClientTest() {
         QUEUE_ALREADY_EXISTS_EXCEPTION.setErrorCode(QUEUE_ALREADY_EXISTS);
 
         when(requestSenderMock.sendRequest(any(GetQueueUrlAction.class)))
@@ -51,13 +51,6 @@ public class DefaultSqsClientTest {
                 .thenReturn(Single.just(new SetQueueAttributesResult()));
         when(requestSenderMock.sendRequest(any(GetQueueUrlAction.class)))
                 .thenReturn(Single.just(new GetQueueUrlResult().withQueueUrl(QUEUE_URL)));
-    }
-
-    @Test
-    public void testGetQueueFromUrl() {
-        SqsQueue<String> queue = client.getQueueFromUrl(QUEUE_URL);
-        assertThat(queue.getQueueUrl()).isEqualTo(QUEUE_URL);
-        verifyZeroInteractions(requestSenderMock);
     }
 
     @Test

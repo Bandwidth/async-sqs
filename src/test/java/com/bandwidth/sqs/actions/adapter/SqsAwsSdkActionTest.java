@@ -1,4 +1,4 @@
-package com.bandwidth.sqs.actions.aws_sdk_adapter;
+package com.bandwidth.sqs.actions.adapter;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,7 +21,6 @@ import com.amazonaws.transform.Marshaller;
 import com.amazonaws.transform.StaxUnmarshallerContext;
 import com.amazonaws.transform.Unmarshaller;
 
-import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
 import org.junit.Test;
 

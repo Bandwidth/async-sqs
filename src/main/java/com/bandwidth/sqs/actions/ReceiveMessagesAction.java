@@ -1,10 +1,12 @@
 package com.bandwidth.sqs.actions;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.transform.ReceiveMessageRequestMarshaller;
 import com.amazonaws.services.sqs.model.transform.ReceiveMessageResultStaxUnmarshaller;
-import com.bandwidth.sqs.actions.aws_sdk_adapter.SqsAwsSdkAction;
+import com.bandwidth.sqs.actions.adapter.SqsAwsSdkAction;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -20,7 +22,8 @@ public class ReceiveMessagesAction extends SqsAwsSdkAction<ReceiveMessageRequest
         );
     }
 
-    public static ReceiveMessageRequest createRequest(String queueUrl, int maxMessages, Optional<Duration> waitTime,
+    @VisibleForTesting
+    static ReceiveMessageRequest createRequest(String queueUrl, int maxMessages, Optional<Duration> waitTime,
             Optional<Duration> visibilityTimeout) {
 
         ReceiveMessageRequest request = new ReceiveMessageRequest()

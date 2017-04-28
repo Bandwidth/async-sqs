@@ -1,14 +1,10 @@
-package com.bandwidth.sqs.request_sender;
+package com.bandwidth.sqs.actions.sender;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.sqs.model.AmazonSQSException;
 import com.bandwidth.sqs.actions.SqsAction;
 
-import java.util.Objects;
-
 import io.reactivex.Single;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.functions.BiPredicate;
 import io.reactivex.subjects.SingleSubject;
 
 public class RetryingSqsRequestSender implements SqsRequestSender {

@@ -1,4 +1,4 @@
-package com.bandwidth.sqs.queue.buffer.task_buffer;
+package com.bandwidth.sqs.queue.buffer;
 
 import java.util.List;
 

@@ -21,6 +21,6 @@ public class SqsClientBuilderTest {
                 .httpClient(asyncHttpClientMock)
                 .retryCount(RETRY_COUNT)
                 .build();
-        assertThat(sqsClient).isInstanceOf(DefaultSqsClient.class);
+        assertThat(sqsClient).isInstanceOf(SqsClient.class);
     }
 }

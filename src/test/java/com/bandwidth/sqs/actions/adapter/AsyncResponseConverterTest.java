@@ -1,4 +1,4 @@
-package com.bandwidth.sqs.actions.aws_sdk_adapter;
+package com.bandwidth.sqs.actions.adapter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 
 import com.amazonaws.Request;
 import com.amazonaws.http.HttpResponse;
-import com.bandwidth.sqs.actions.aws_sdk_adapter.AsyncResponseConverter;
 
 import org.asynchttpclient.Response;
 import org.junit.Test;

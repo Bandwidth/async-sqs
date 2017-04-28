@@ -1,9 +1,11 @@
-package com.bandwidth.sqs.queue.buffer.task_buffer;
+package com.bandwidth.sqs.queue.buffer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+
+import com.bandwidth.sqs.queue.buffer.task.Task;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -22,7 +24,7 @@ public class KeyedTaskBufferTest {
 
     private int count = 0;
 
-    private final Task<String, Integer> task = (key, values) -> values.forEach(value -> count += value);
+    private final Task<String, Integer> task = (key, map) -> map.values().forEach(value -> count += value);
 
     private final KeyedTaskBuffer<String, Integer> taskBuffer = new KeyedTaskBuffer<>(MAX_BUFFER_SIZE,
             MAX_WAIT_MILLIS_100, task

@@ -1,4 +1,4 @@
-package com.bandwidth.sqs.actions.aws_sdk_adapter;
+package com.bandwidth.sqs.actions.adapter;
 
 import com.amazonaws.Request;
 import com.amazonaws.http.HttpResponse;

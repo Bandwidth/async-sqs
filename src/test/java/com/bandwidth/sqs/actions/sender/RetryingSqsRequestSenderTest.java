@@ -1,4 +1,4 @@
-package com.bandwidth.sqs.request_sender;
+package com.bandwidth.sqs.actions.sender;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -9,6 +9,8 @@ import static org.mockito.Mockito.when;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.sqs.model.AmazonSQSException;
 import com.bandwidth.sqs.actions.SqsAction;
+import com.bandwidth.sqs.actions.sender.RetryingSqsRequestSender;
+import com.bandwidth.sqs.actions.sender.SqsRequestSender;
 
 import org.junit.Test;
 

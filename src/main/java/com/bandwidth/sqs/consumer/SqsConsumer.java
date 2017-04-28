@@ -34,7 +34,7 @@ import io.reactivex.subjects.CompletableSubject;
 
 import static com.bandwidth.sqs.consumer.acknowledger.MessageAcknowledger.AckMode;
 
-public class Consumer {
+public class SqsConsumer {
     public static final int NUM_MESSAGES_PER_REQUEST = 10;
     public static final Duration LOAD_BALANCED_REQUEST_WAIT_TIME = Duration.ofSeconds(1);
     public static final Duration MAX_WAIT_TIME = Duration.ofSeconds(20);
@@ -45,7 +45,7 @@ public class Consumer {
 
     private static final int TIME_WINDOW_MIN_COUNT = 10;
 
-    private static final Logger LOG = LoggerFactory.getLogger(Consumer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SqsConsumer.class);
 
     private final SqsQueue<String> sqsQueue;
     private final AtomicInteger maxPermits;
@@ -54,7 +54,7 @@ public class Consumer {
 
     private final int maxQueueSize;
     private final BackoffStrategy backoffStrategy;
-    private final ConsumerManager manager;
+    private final SqsConsumerManager manager;
     private final ExpirationStrategy expirationStrategy;
     private final AtomicInteger inFlightLoadBalancedRequests = new AtomicInteger(0);
     private final AtomicBoolean longPollRequestInFlight = new AtomicBoolean(false);
@@ -69,13 +69,13 @@ public class Consumer {
     private boolean shuttingDown = false;
 
     /**
-     * Adds a consumer for a specific SQS Queue. Once a consumer is started, the handler will be called
-     * from a thread-pool to process messages. It is safe to use blocking calls in the handler as
-     * this will not impact performance if a sufficient number of `workerThreads` are configured in the ConsumerManager.
-     * Only one consumer is normally needed per SQS Queue. A single long-polling request is always in-flight
-     * for each consumer in addition to the load-balanced requests configured in the `ConsumerManager`.
+     * Adds a consumer for a specific SQS Queue. Once a consumer is started, the handler will be called from a
+     * thread-pool to process messages. It is safe to use blocking calls in the handler as this will not impact
+     * performance if a sufficient number of `workerThreads` are configured in the SqsConsumerManager. Only one consumer
+     * is normally needed per SQS Queue. A single long-polling request is always in-flight for each consumer in addition
+     * to the load-balanced requests configured in the `SqsConsumerManager`.
      */
-    public Consumer(ConsumerBuilder builder) {
+    public SqsConsumer(SqsConsumerBuilder builder) {
         this.handler = requireNonNull(builder.consumerHandler);
         this.backoffStrategy = requireNonNull(builder.backoffStrategy);
         this.manager = requireNonNull(builder.consumerManager);
@@ -204,7 +204,7 @@ public class Consumer {
         if (messageBuffer.size() + NUM_MESSAGES_PER_REQUEST <= maxQueueSize) {
             if (!longPollRequestInFlight.getAndSet(true)) {
                 //always have 1 long-polling request in flight, unless messageBuffer is full
-                startNewRequest(RequestType.LongPolling);
+                startNewRequest(RequestType.LONG_POLLING);
             }
         }
 
@@ -212,7 +212,7 @@ public class Consumer {
 
         while (inFlightLoadBalancedRequests.get() < allocatedRequests) {
             inFlightLoadBalancedRequests.getAndIncrement();
-            startNewRequest(RequestType.LoadBalanced);
+            startNewRequest(RequestType.LOAD_BALANCED);
         }
     }
 
@@ -290,8 +290,8 @@ public class Consumer {
     }
 
     public enum RequestType {
-        LongPolling,
-        LoadBalanced
+        LONG_POLLING,
+        LOAD_BALANCED
     }
 
     private void startNewRequest(RequestType requestType) {
@@ -301,7 +301,7 @@ public class Consumer {
     }
 
     private static Duration getWaitTimeForRequestType(RequestType requestType) {
-        if (requestType == RequestType.LoadBalanced) {
+        if (requestType == RequestType.LOAD_BALANCED) {
             return LOAD_BALANCED_REQUEST_WAIT_TIME;
         } else {
             return MAX_WAIT_TIME;
@@ -323,7 +323,7 @@ public class Consumer {
         }
 
         public void updateLoadBalanceRequests(int numMessages) {
-            manager.updateAllocatedInFlightRequests(Consumer.this, new LoadBalanceRequestUpdater(numMessages));
+            manager.updateAllocatedInFlightRequests(SqsConsumer.this, new LoadBalanceRequestUpdater(numMessages));
         }
 
         @Override
@@ -340,10 +340,11 @@ public class Consumer {
         }
 
         @Override
-        public void onSubscribe(Disposable disposable) {}
+        public void onSubscribe(Disposable disposable) {
+        }
 
         public void always() {
-            if (requestType == RequestType.LongPolling) {
+            if (requestType == RequestType.LONG_POLLING) {
                 longPollRequestInFlight.set(false);
             } else {
                 inFlightLoadBalancedRequests.decrementAndGet();

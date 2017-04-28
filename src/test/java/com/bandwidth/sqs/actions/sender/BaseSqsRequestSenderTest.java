@@ -1,4 +1,4 @@
-package com.bandwidth.sqs.request_sender;
+package com.bandwidth.sqs.actions.sender;
 
 
 import static org.mockito.ArgumentMatchers.any;
@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.bandwidth.sqs.actions.SqsAction;
+import com.bandwidth.sqs.actions.sender.BaseSqsRequestSender;
 
 import org.asynchttpclient.AsyncCompletionHandler;
 import org.asynchttpclient.AsyncHttpClient;

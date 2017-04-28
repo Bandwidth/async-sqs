@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableMap;
 
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
-import com.bandwidth.sqs.queue.buffer.entry.SendMessageEntry;
+import com.bandwidth.sqs.queue.entry.SendMessageEntry;
 
 import org.junit.Test;
 

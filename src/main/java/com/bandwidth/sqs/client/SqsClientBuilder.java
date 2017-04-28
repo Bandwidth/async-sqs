@@ -2,9 +2,9 @@ package com.bandwidth.sqs.client;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.bandwidth.sqs.request_sender.BaseSqsRequestSender;
-import com.bandwidth.sqs.request_sender.RetryingSqsRequestSender;
-import com.bandwidth.sqs.request_sender.SqsRequestSender;
+import com.bandwidth.sqs.actions.sender.BaseSqsRequestSender;
+import com.bandwidth.sqs.actions.sender.RetryingSqsRequestSender;
+import com.bandwidth.sqs.actions.sender.SqsRequestSender;
 
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClient;
@@ -36,6 +36,6 @@ public class SqsClientBuilder {
     public SqsClient build() {
         SqsRequestSender requestSender = new RetryingSqsRequestSender(retryCount,
                 new BaseSqsRequestSender(httpClient, credentialsProvider));
-        return new DefaultSqsClient(requestSender);
+        return new SqsClient(requestSender);
     }
 }

@@ -1,7 +1,9 @@
-package com.bandwidth.sqs.queue.buffer.task_buffer;
+package com.bandwidth.sqs.queue.buffer;
 
 
 import com.google.common.annotations.VisibleForTesting;
+
+import com.bandwidth.sqs.queue.buffer.task.Task;
 
 import java.time.Duration;
 import java.util.ArrayList;

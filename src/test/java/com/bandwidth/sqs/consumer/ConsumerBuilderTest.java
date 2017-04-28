@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.amazonaws.services.sqs.model.Message;
 import com.bandwidth.sqs.consumer.handler.ConsumerHandler;
 import com.bandwidth.sqs.consumer.strategy.backoff.BackoffStrategy;
 import com.bandwidth.sqs.consumer.strategy.backoff.NullBackoffStrategy;
@@ -20,16 +19,16 @@ import io.reactivex.Observable;
 @SuppressWarnings("unchecked")
 public class ConsumerBuilderTest {
 
-    private static final int BUFFER_SIZE = ConsumerBuilder.DEFAULT_BUFFER_SIZE + 1;
-    private static final int NUM_PERMITS = ConsumerBuilder.DEFAULT_NUM_PERMITS + 1;
+    private static final int BUFFER_SIZE = SqsConsumerBuilder.DEFAULT_BUFFER_SIZE + 1;
+    private static final int NUM_PERMITS = SqsConsumerBuilder.DEFAULT_NUM_PERMITS + 1;
 
     private final SqsQueue<String> sqsQueueMock = mock(SqsQueue.class);
-    private final ConsumerManager consumerManagerMock = mock(ConsumerManager.class);
+    private final SqsConsumerManager consumerManagerMock = mock(SqsConsumerManager.class);
     private final ConsumerHandler<String> consumerHandlerMock = mock(ConsumerHandler.class);
     private final BackoffStrategy backoffStrategy = new NullBackoffStrategy();
     private final ExpirationStrategy expirationStrategy = new NeverExpiresStrategy();
 
-    private final ConsumerBuilder builder = new ConsumerBuilder(consumerManagerMock, sqsQueueMock, consumerHandlerMock);
+    private final SqsConsumerBuilder builder = new SqsConsumerBuilder(consumerManagerMock, sqsQueueMock, consumerHandlerMock);
 
     @Before
     public void setup() {
@@ -38,7 +37,7 @@ public class ConsumerBuilderTest {
 
     @Test
     public void testBuilder() {
-        Consumer consumer = builder
+        SqsConsumer consumer = builder
                 .withBackoffStrategy(backoffStrategy)
                 .withBufferSize(BUFFER_SIZE)
                 .withNumPermits(NUM_PERMITS)

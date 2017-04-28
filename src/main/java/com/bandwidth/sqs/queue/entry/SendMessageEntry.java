@@ -1,4 +1,4 @@
-package com.bandwidth.sqs.queue.buffer.entry;
+package com.bandwidth.sqs.queue.entry;
 
 import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
