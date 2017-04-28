@@ -18,7 +18,6 @@ public class DeleteMessageBatchAction extends SqsAwsSdkAction<DeleteMessageBatch
     }
 
     public static DeleteMessageBatchRequest createRequest(String queueUrl, Map<String, DeleteMessageEntry> entries) {
-        System.out.println("Deleting " + entries.size() + " messages");
         return new DeleteMessageBatchRequest()
                 .withQueueUrl(queueUrl)
                 .withEntries(entries.entrySet().stream()

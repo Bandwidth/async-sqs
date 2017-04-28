@@ -37,7 +37,7 @@ public interface SqsClient {
      * @param clientConfig Configuration of the SQS client
      * @return an SqsQueue
      */
-    Single<SqsQueue<String>> assertQueue(SqsQueueConfig queueConfig, SqsQueueClientConfig clientConfig);
+    Single<SqsQueue<String>> upsertQueue(SqsQueueConfig queueConfig, SqsQueueClientConfig clientConfig);
 
     /**
      * @param queueName Name of the SQS queue. This queue must already exist, it will not be created.
@@ -65,8 +65,8 @@ public interface SqsClient {
      * @param queueConfig Configuration of the SQS queue
      * @return an SqsQueue
      */
-    default Single<SqsQueue<String>> assertQueue(SqsQueueConfig queueConfig) {
-        return assertQueue(queueConfig, ImmutableSqsQueueClientConfig.builder().build());
+    default Single<SqsQueue<String>> upsertQueue(SqsQueueConfig queueConfig) {
+        return upsertQueue(queueConfig, ImmutableSqsQueueClientConfig.builder().build());
     }
 
     static String getSqsHostForRegion(Regions region) {

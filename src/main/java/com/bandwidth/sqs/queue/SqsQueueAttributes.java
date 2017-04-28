@@ -45,16 +45,6 @@ public abstract class SqsQueueAttributes {
     }
 
     /**
-     * Name of dead-letter queue, if it should exist
-     *
-     * Default: None
-     */
-    @Default
-    public Optional<String> getDeadletterQueueName() {
-        return Optional.empty();
-    }
-
-    /**
      * The amount of time SQS will ratain a message if it does not get deleted
      * Must be between 1 minute and 14 days
      *
@@ -67,7 +57,6 @@ public abstract class SqsQueueAttributes {
 
     @Derived
     public Map<String, String> getStringMap() {
-        Optional.ofNullable(4).orElse(null);
         //TODO: add deadletter config
         return ImmutableMap.<String, String>builder()
                 .put(QueueAttributeName.DelaySeconds.toString(),
