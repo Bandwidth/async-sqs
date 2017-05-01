@@ -1,9 +1,8 @@
 package com.bandwidth.sqs.queue.buffer.task;
 
 import com.bandwidth.sqs.actions.SendMessageBatchAction;
-import com.bandwidth.sqs.queue.buffer.entry.SendMessageEntry;
-import com.bandwidth.sqs.queue.buffer.task_buffer.Task;
-import com.bandwidth.sqs.request_sender.SqsRequestSender;
+import com.bandwidth.sqs.queue.entry.SendMessageEntry;
+import com.bandwidth.sqs.actions.sender.SqsRequestSender;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,12 +19,7 @@ public class SendMessageTask implements Task<String, SendMessageEntry> {
     }
 
     @Override
-    public void run(String queueUrl, List<SendMessageEntry> entries) {
-        Map<String, SendMessageEntry> entryMap = new HashMap<>();
-        IntStream.range(0, entries.size()).forEach((id) -> {
-            entryMap.put(Integer.toString(id), entries.get(id));
-        });
-
+    public void run(String queueUrl, Map<String, SendMessageEntry> entryMap) {
         SendMessageBatchAction action = new SendMessageBatchAction(queueUrl, entryMap);
 
         requestSender.sendRequest(action).subscribe((result) -> {
@@ -40,7 +34,7 @@ public class SendMessageTask implements Task<String, SendMessageEntry> {
                         });
             });
         }, (err) -> {//the entire batch operation failed
-            entries.forEach((entry) -> entry.getResultSubject().onError(err));
+            entryMap.values().forEach((entry) -> entry.getResultSubject().onError(err));
         });
     }
 }

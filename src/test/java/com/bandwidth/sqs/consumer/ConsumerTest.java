@@ -15,9 +15,9 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.handlers.AsyncHandler;
-import com.bandwidth.sqs.consumer.Consumer.LoadBalanceRequestUpdater;
-import com.bandwidth.sqs.consumer.Consumer.ReceiveMessageHandler;
-import com.bandwidth.sqs.consumer.Consumer.RequestType;
+import com.bandwidth.sqs.consumer.SqsConsumer.LoadBalanceRequestUpdater;
+import com.bandwidth.sqs.consumer.SqsConsumer.ReceiveMessageHandler;
+import com.bandwidth.sqs.consumer.SqsConsumer.RequestType;
 import com.bandwidth.sqs.consumer.acknowledger.MessageAcknowledger;
 import com.bandwidth.sqs.consumer.strategy.expiration.ExpirationStrategy;
 import com.bandwidth.sqs.consumer.strategy.loadbalance.LoadBalanceStrategy;
@@ -68,7 +68,7 @@ public class ConsumerTest {
     private final ArrayDeque<SqsMessage<String>> messageBufferSmall = spy(new ArrayDeque<SqsMessage<String>>());
     private final ArrayDeque<SqsMessage<String>> messageBufferFull = spy(new ArrayDeque<SqsMessage<String>>());
     private final BackoffStrategy backoffStrategyMock = mock(BackoffStrategy.class);
-    private final ConsumerManager consumerManagerMock = mock(ConsumerManager.class);
+    private final SqsConsumerManager consumerManagerMock = mock(SqsConsumerManager.class);
     private final ConsumerHandler<String> consumerHandlerMock = mock(ConsumerHandler.class);
     private final SqsQueue<String> sqsQueueMock = mock(SqsQueue.class);
     private final LoadBalanceStrategy loadBalanceStrategyMock = mock(LoadBalanceStrategy.class);
@@ -83,13 +83,13 @@ public class ConsumerTest {
     @Captor
     private ArgumentCaptor<ReceiveMessageHandler> receiveMessageHandlerCaptor;
 
-    private Consumer consumer;
+    private SqsConsumer consumer;
 
     public ConsumerTest() {
         when(consumerHandlerMock.getPermitChangeRequests()).thenReturn(Observable.never());
         when(backoffStrategyMock.getWindowSize()).thenReturn(WINDOW_SIZE);
 
-        consumer = new ConsumerBuilder(consumerManagerMock, sqsQueueMock, consumerHandlerMock)
+        consumer = new SqsConsumerBuilder(consumerManagerMock, sqsQueueMock, consumerHandlerMock)
                 .withNumPermits(NUM_PERMITS)
                 .withBufferSize(MAX_QUEUE_SIZE)
                 .withBackoffStrategy(backoffStrategyMock)
@@ -114,7 +114,7 @@ public class ConsumerTest {
         ArgumentCaptor<Optional<Duration>> requestCaptor = ArgumentCaptor.forClass(Optional.class);
         //the first request sent will be the long-polling request
         verify(sqsQueueMock).receiveMessages(anyInt(), requestCaptor.capture());
-        assertThat(requestCaptor.getValue()).isEqualTo(Optional.of(Consumer.MAX_WAIT_TIME));
+        assertThat(requestCaptor.getValue()).isEqualTo(Optional.of(SqsConsumer.MAX_WAIT_TIME));
     }
 
     @Test
@@ -131,7 +131,7 @@ public class ConsumerTest {
         ArgumentCaptor<Optional<Duration>> requestCaptor = ArgumentCaptor.forClass(Optional.class);
         verify(sqsQueueMock, times(2)).receiveMessages(anyInt(), requestCaptor.capture());
         assertThat(requestCaptor.getAllValues().get(1))
-                .isEqualTo(Optional.of(Consumer.LOAD_BALANCED_REQUEST_WAIT_TIME));
+                .isEqualTo(Optional.of(SqsConsumer.LOAD_BALANCED_REQUEST_WAIT_TIME));
     }
 
     @Test
@@ -140,12 +140,12 @@ public class ConsumerTest {
         consumer.update();//nothing should be started
         ArgumentCaptor<Optional<Duration>> requestCaptor = ArgumentCaptor.forClass(Optional.class);
         verify(sqsQueueMock).receiveMessages(anyInt(), requestCaptor.capture());
-        assertThat(requestCaptor.getValue()).isEqualTo(Optional.of(Consumer.MAX_WAIT_TIME));
+        assertThat(requestCaptor.getValue()).isEqualTo(Optional.of(SqsConsumer.MAX_WAIT_TIME));
     }
 
     @Test
     public void testStartNewRequestBufferFull() {
-        consumer = new ConsumerBuilder(consumerManagerMock, sqsQueueMock, consumerHandlerMock)
+        consumer = new SqsConsumerBuilder(consumerManagerMock, sqsQueueMock, consumerHandlerMock)
                 .withNumPermits(NO_PERMITS)
                 .withBufferSize(MAX_QUEUE_SIZE_1)
                 .withBackoffStrategy(backoffStrategyMock)
@@ -166,7 +166,7 @@ public class ConsumerTest {
 
     @Test
     public void testBackoffDelay() {
-        consumer = new ConsumerBuilder(consumerManagerMock, sqsQueueMock, consumerHandlerMock)
+        consumer = new SqsConsumerBuilder(consumerManagerMock, sqsQueueMock, consumerHandlerMock)
                 .withNumPermits(NUM_PERMITS)
                 .withBufferSize(MAX_QUEUE_SIZE_1)
                 .withBackoffStrategy(backoffStrategyMock)
@@ -189,8 +189,8 @@ public class ConsumerTest {
 
     @Test
     public void testTimerTaskUpdate() {
-        Consumer consumerMock = mock(Consumer.class);
-        Consumer.UpdateTimerTask task = consumerMock.new UpdateTimerTask();
+        SqsConsumer consumerMock = mock(SqsConsumer.class);
+        SqsConsumer.UpdateTimerTask task = consumerMock.new UpdateTimerTask();
         task.run();
         verify(consumerMock).update();
     }
@@ -227,14 +227,14 @@ public class ConsumerTest {
 
     @Test
     public void testReceiveMessageHandlerUpdateLoadBalanceRequests() {
-        ReceiveMessageHandler handler = consumer.new ReceiveMessageHandler(RequestType.LoadBalanced);
+        ReceiveMessageHandler handler = consumer.new ReceiveMessageHandler(RequestType.LOAD_BALANCED);
         handler.updateLoadBalanceRequests(MESSAGE_COUNT);
         verify(consumerManagerMock).updateAllocatedInFlightRequests(eq(consumer), any());
     }
 
     @Test
     public void testReceiveMessageHandlerOnError() {
-        ReceiveMessageHandler handler = consumer.new ReceiveMessageHandler(RequestType.LoadBalanced);
+        ReceiveMessageHandler handler = consumer.new ReceiveMessageHandler(RequestType.LOAD_BALANCED);
         ReceiveMessageHandler handlerSpy = spy(handler);
         handlerSpy.onError(new NullPointerException());
         verify(handlerSpy).always();
@@ -242,9 +242,9 @@ public class ConsumerTest {
 
     @Test
     public void testReceiveMessageHandlerOnSuccess() {
-        Consumer consumerSpy = spy(consumer);
+        SqsConsumer consumerSpy = spy(consumer);
         SingleObserver<List<SqsMessage<String>>> handler =
-                spy(consumerSpy.new ReceiveMessageHandler(RequestType.LongPolling));
+                spy(consumerSpy.new ReceiveMessageHandler(RequestType.LONG_POLLING));
         handler.onSuccess(Collections.singletonList(SQS_MESSAGE));
 
         verify(consumerSpy, times(2)).update();
@@ -253,7 +253,7 @@ public class ConsumerTest {
     @Test
     public void testReceiveMessageHandlerOnSuccessNoMessages() {
         consumer.setMessageBuffer(messageBufferEmpty);
-        ReceiveMessageHandler handler = consumer.new ReceiveMessageHandler(RequestType.LongPolling);
+        ReceiveMessageHandler handler = consumer.new ReceiveMessageHandler(RequestType.LONG_POLLING);
         handler.onSuccess(Collections.emptyList());
 
         assertThat(messageBufferEmpty.size()).isEqualTo(0);
@@ -371,7 +371,7 @@ public class ConsumerTest {
     @Test
     public void testRetryAck() {
         ConsumerHandler<String> handlerSpy = spy(new RetryingHandler());
-        consumer = new ConsumerBuilder(consumerManagerMock, sqsQueueMock, handlerSpy)
+        consumer = new SqsConsumerBuilder(consumerManagerMock, sqsQueueMock, handlerSpy)
                 .withNumPermits(NO_PERMITS)
                 .withBufferSize(MAX_QUEUE_SIZE_1)
                 .withBackoffStrategy(backoffStrategyMock)

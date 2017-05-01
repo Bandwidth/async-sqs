@@ -2,20 +2,27 @@ package com.bandwidth.sqs.client;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.bandwidth.sqs.request_sender.BaseSqsRequestSender;
-import com.bandwidth.sqs.request_sender.RetryingSqsRequestSender;
-import com.bandwidth.sqs.request_sender.SqsRequestSender;
+import com.bandwidth.sqs.actions.sender.BaseSqsRequestSender;
+import com.bandwidth.sqs.actions.sender.RetryingSqsRequestSender;
+import com.bandwidth.sqs.actions.sender.SqsRequestSender;
 
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 
 import io.reactivex.functions.Function;
-
 
 public class SqsClientBuilder<T> {
     public static final int DEFAULT_RETRY_COUNT = 3;
     public static final AWSCredentialsProvider DEFAULT_CREDENTIALS_PROVIDER = new DefaultAWSCredentialsProviderChain();
-    public static final AsyncHttpClient DEFAULT_ASYNC_HTTP_CLIENT = new DefaultAsyncHttpClient();
+    public static final AsyncHttpClient DEFAULT_ASYNC_HTTP_CLIENT = new DefaultAsyncHttpClient(
+            new DefaultAsyncHttpClientConfig.Builder()
+                    .setKeepAlive(true)
+                    .setConnectionTtl(10000)//10 seconds
+                    .setMaxConnections(Integer.MAX_VALUE)
+                    .setMaxConnectionsPerHost(Integer.MAX_VALUE)
+                    .build()
+    );
 
     public final Function<String, T> deserialize;
     public final Function<T, String> serialize;
@@ -58,6 +65,6 @@ public class SqsClientBuilder<T> {
     public SqsClient<T> build() {
         SqsRequestSender requestSender = new RetryingSqsRequestSender(retryCount,
                 new BaseSqsRequestSender(httpClient, credentialsProvider));
-        return new DefaultSqsClient<>(requestSender, deserialize, serialize);
+        return new SqsClient<>(requestSender, deserialize, serialize);
     }
 }

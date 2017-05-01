@@ -1,12 +1,14 @@
 package com.bandwidth.sqs.actions;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import com.amazonaws.services.sqs.model.ChangeMessageVisibilityBatchRequest;
 import com.amazonaws.services.sqs.model.ChangeMessageVisibilityBatchRequestEntry;
 import com.amazonaws.services.sqs.model.ChangeMessageVisibilityBatchResult;
 import com.amazonaws.services.sqs.model.transform.ChangeMessageVisibilityBatchRequestMarshaller;
 import com.amazonaws.services.sqs.model.transform.ChangeMessageVisibilityBatchResultStaxUnmarshaller;
-import com.bandwidth.sqs.actions.aws_sdk_adapter.SqsAwsSdkAction;
-import com.bandwidth.sqs.queue.buffer.entry.ChangeMessageVisibilityEntry;
+import com.bandwidth.sqs.actions.adapter.SqsAwsSdkAction;
+import com.bandwidth.sqs.queue.entry.ChangeMessageVisibilityEntry;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,7 +22,8 @@ public class ChangeMessageVisibilityBatchAction
                 new ChangeMessageVisibilityBatchResultStaxUnmarshaller());
     }
 
-    public static ChangeMessageVisibilityBatchRequest createRequest(String queueUrl, Map<String,
+    @VisibleForTesting
+    static ChangeMessageVisibilityBatchRequest createRequest(String queueUrl, Map<String,
             ChangeMessageVisibilityEntry> entries) {
 
         return new ChangeMessageVisibilityBatchRequest()

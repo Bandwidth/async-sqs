@@ -2,9 +2,7 @@ package com.bandwidth.sqs.consumer.strategy.loadbalance;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.bandwidth.sqs.consumer.Consumer;
-import com.bandwidth.sqs.consumer.strategy.loadbalance.DefaultLoadBalanceStrategy;
-import com.bandwidth.sqs.consumer.strategy.loadbalance.LoadBalanceStrategy;
+import com.bandwidth.sqs.consumer.SqsConsumer;
 import com.bandwidth.sqs.consumer.strategy.loadbalance.LoadBalanceStrategy.Action;
 
 import org.junit.Test;
@@ -21,11 +19,11 @@ public class DefaultLoadBalanceStrategyTest {
 
     @Test
     public void fullResponseTest() {
-        assertThat(strategy.onReceiveSuccess(Consumer.NUM_MESSAGES_PER_REQUEST)).isEqualTo(Action.Increase);
-        assertThat(strategy.onReceiveSuccess(Consumer.NUM_MESSAGES_PER_REQUEST)).isEqualTo(Action.NoChange);
-        assertThat(strategy.onReceiveSuccess(Consumer.NUM_MESSAGES_PER_REQUEST)).isEqualTo(Action.NoChange);
-        assertThat(strategy.onReceiveSuccess(Consumer.NUM_MESSAGES_PER_REQUEST)).isEqualTo(Action.NoChange);
-        assertThat(strategy.onReceiveSuccess(Consumer.NUM_MESSAGES_PER_REQUEST)).isEqualTo(Action.Increase);
+        assertThat(strategy.onReceiveSuccess(SqsConsumer.NUM_MESSAGES_PER_REQUEST)).isEqualTo(Action.Increase);
+        assertThat(strategy.onReceiveSuccess(SqsConsumer.NUM_MESSAGES_PER_REQUEST)).isEqualTo(Action.NoChange);
+        assertThat(strategy.onReceiveSuccess(SqsConsumer.NUM_MESSAGES_PER_REQUEST)).isEqualTo(Action.NoChange);
+        assertThat(strategy.onReceiveSuccess(SqsConsumer.NUM_MESSAGES_PER_REQUEST)).isEqualTo(Action.NoChange);
+        assertThat(strategy.onReceiveSuccess(SqsConsumer.NUM_MESSAGES_PER_REQUEST)).isEqualTo(Action.Increase);
     }
 
     @Test

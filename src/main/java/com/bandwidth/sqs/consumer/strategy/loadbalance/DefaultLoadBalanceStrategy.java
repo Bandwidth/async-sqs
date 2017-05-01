@@ -1,8 +1,6 @@
 package com.bandwidth.sqs.consumer.strategy.loadbalance;
 
-import static com.bandwidth.sqs.consumer.Consumer.NUM_MESSAGES_PER_REQUEST;
-
-import com.bandwidth.sqs.consumer.strategy.loadbalance.LoadBalanceStrategy;
+import static com.bandwidth.sqs.consumer.SqsConsumer.NUM_MESSAGES_PER_REQUEST;
 
 public class DefaultLoadBalanceStrategy implements LoadBalanceStrategy {
     private static final int INCREASE_CONCURRENCY_LIMIT = NUM_MESSAGES_PER_REQUEST;
