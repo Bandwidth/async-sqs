@@ -3,7 +3,7 @@ package com.bandwidth.sqs.client;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.model.AmazonSQSException;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
-import com.bandwidth.sqs.queue.SerializingSqsQueue;
+import com.bandwidth.sqs.queue.MappingSqsQueue;
 import com.bandwidth.sqs.queue.SqsQueue;
 import com.bandwidth.sqs.queue.SqsQueueClientConfig;
 import com.bandwidth.sqs.queue.SqsQueueConfig;
@@ -67,7 +67,7 @@ public class SqsClient<T> {
         Single<SqsQueue<T>> output = requestSender.sendRequest(action).map(createQueueResult -> {
             SqsQueue<String> rawQueue = new BufferedStringSqsQueue(createQueueResult.getQueueUrl(), requestSender,
                     clientConfig, Optional.of(queueConfig.getAttributes()));
-            return new SerializingSqsQueue<>(rawQueue, deserialize, serialize);
+            return new MappingSqsQueue<>(rawQueue, deserialize, serialize);
         });
         return output.onErrorResumeNext((err) -> {
             if (err instanceof AmazonSQSException) {
@@ -111,6 +111,6 @@ public class SqsClient<T> {
 
     private SqsQueue<T> getQueueFromUrl(String queueUrl, SqsQueueClientConfig clientConfig) {
         SqsQueue<String> rawQueue = new BufferedStringSqsQueue(queueUrl, requestSender, clientConfig, Optional.empty());
-        return new SerializingSqsQueue<>(rawQueue, deserialize, serialize);
+        return new MappingSqsQueue<>(rawQueue, deserialize, serialize);
     }
 }

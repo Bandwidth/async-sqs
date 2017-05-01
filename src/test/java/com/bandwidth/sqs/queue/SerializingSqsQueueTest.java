@@ -34,7 +34,7 @@ public class SerializingSqsQueueTest {
     private final Function<String, Integer> deserialize = mock(Function.class);
     private final Function<Integer, String> serialize = mock(Function.class);
     private final SqsQueue<String> delegateMock = mock(SqsQueue.class);
-    private final SqsQueue<Integer> sqsQueue = new SerializingSqsQueue<>(delegateMock, deserialize, serialize);
+    private final SqsQueue<Integer> sqsQueue = new MappingSqsQueue<>(delegateMock, deserialize, serialize);
 
     public SerializingSqsQueueTest() throws Exception {
         when(deserialize.apply(any())).thenReturn(DESERIALIZED_VALUE);
