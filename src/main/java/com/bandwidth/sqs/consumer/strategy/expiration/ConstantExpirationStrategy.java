@@ -1,6 +1,6 @@
 package com.bandwidth.sqs.consumer.strategy.expiration;
 
-import com.bandwidth.sqs.consumer.TimedMessage;
+import com.bandwidth.sqs.queue.SqsMessage;
 
 import java.time.Duration;
 
@@ -16,8 +16,8 @@ public class ConstantExpirationStrategy implements ExpirationStrategy {
     }
 
     @Override
-    public boolean isExpired(TimedMessage timedMessage) {
-        Duration timeUntilExpiration = maxAge.minus(timedMessage.getMessageAge());
+    public boolean isExpired(SqsMessage<String> sqsMessage) {
+        Duration timeUntilExpiration = maxAge.minus(sqsMessage.getMessageAge());
         return timeUntilExpiration.isNegative();
     }
 }

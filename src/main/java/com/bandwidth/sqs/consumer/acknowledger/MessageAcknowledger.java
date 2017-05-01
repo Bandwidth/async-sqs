@@ -1,10 +1,6 @@
 package com.bandwidth.sqs.consumer.acknowledger;
 
-
-import com.amazonaws.services.sqs.model.ChangeMessageVisibilityRequest;
-import com.amazonaws.services.sqs.model.DeleteMessageRequest;
-import com.bandwidth.sqs.client.SqsAsyncIoClient;
-import com.bandwidth.sqs.publisher.MessagePublisher;
+import com.bandwidth.sqs.queue.SqsQueue;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -17,37 +13,26 @@ import io.reactivex.subjects.SingleSubject;
 
 public class MessageAcknowledger<T> {
 
-    protected final SqsAsyncIoClient sqsClient;
-    protected final String queueUrl;
-    protected final String receiptId;
-
+    private final SqsQueue<T> sqsQueue;
+    private final String receiptId;
     private final SingleSubject<AckMode> ackModeSingle;
     private final CompletableSubject ackingComplete;
 
-    private final MessagePublisher<T> messagePublisher;
-
-    public MessageAcknowledger(SqsAsyncIoClient sqsClient, String queueUrl, String receiptId,
-            MessagePublisher<T> messagePublisher) {
-        this.sqsClient = sqsClient;
-        this.queueUrl = queueUrl;
+    public MessageAcknowledger(SqsQueue<T> sqsQueue, String receiptId) {
+        this.sqsQueue = sqsQueue;
         this.receiptId = receiptId;
-
         this.ackModeSingle = SingleSubject.create();
         this.ackingComplete = CompletableSubject.create();
-        this.messagePublisher = messagePublisher;
     }
 
     /**
      * Delegating constructor. Any ack method called on this instance will also call it on the delegate.
      */
-    public MessageAcknowledger(MessageAcknowledger<?> delegate, MessagePublisher<T> messagePublisher) {
-        this.sqsClient = delegate.sqsClient;
-        this.queueUrl = delegate.queueUrl;
+    public MessageAcknowledger(MessageAcknowledger<?> delegate, SqsQueue<T> sqsQueue) {
+        this.sqsQueue = sqsQueue;
         this.receiptId = delegate.receiptId;
-
         this.ackModeSingle = delegate.ackModeSingle;
         this.ackingComplete = delegate.ackingComplete;
-        this.messagePublisher = messagePublisher;
     }
 
     /**
@@ -55,11 +40,7 @@ public class MessageAcknowledger<T> {
      */
     public void delete() {
         ackModeSingle.onSuccess(AckMode.DELETE);
-
-        DeleteMessageRequest request = new DeleteMessageRequest()
-                .withQueueUrl(queueUrl)
-                .withReceiptHandle(receiptId);
-        sqsClient.deleteMessage(request).toCompletable().subscribeWith(ackingComplete);
+        sqsQueue.deleteMessage(receiptId).subscribeWith(ackingComplete);
     }
 
     /**
@@ -94,12 +75,7 @@ public class MessageAcknowledger<T> {
      */
     public void delay(Duration newVisibilityTimeout) {
         ackModeSingle.onSuccess(AckMode.DELAY);
-
-        ChangeMessageVisibilityRequest request = new ChangeMessageVisibilityRequest()
-                .withQueueUrl(queueUrl)
-                .withVisibilityTimeout((int) newVisibilityTimeout.getSeconds())
-                .withReceiptHandle(receiptId);
-        sqsClient.changeMessageVisibility(request).toCompletable().subscribeWith(ackingComplete);
+        sqsQueue.changeMessageVisibility(receiptId, newVisibilityTimeout).subscribeWith(ackingComplete);
     }
 
     /**
@@ -111,28 +87,31 @@ public class MessageAcknowledger<T> {
      * It may be a good idea to modify the message and include your own retry count, since the SQS receiveCount will be
      * reset to 0 with a new message.
      */
-    public void replace(T newMessage, Duration delay) {
+    public void replace(T newMessage, Optional<Duration> delay) {
         ackModeSingle.onSuccess(AckMode.MODIFY);
-        doTransfer(newMessage, queueUrl, delay).subscribeWith(ackingComplete);
+        doTransfer(newMessage, sqsQueue, delay).subscribeWith(ackingComplete);
+    }
+
+    public void replace(T newMessage) {
+        replace(newMessage, Optional.empty());
     }
 
     /**
      * Same as replace, but the modified message is published to a different SQS queue.
      * If you want to publish a modified or delayed message to the SAME queue, you must use replace or requeue instead.
      */
-    public void transfer(T newMessage, String newQueueUrl, Duration delay) {
+    public void transfer(T newMessage, SqsQueue<T> newQueue, Optional<Duration> delay) {
         ackModeSingle.onSuccess(AckMode.TRANSFER);
-        doTransfer(newMessage, newQueueUrl, delay).subscribeWith(ackingComplete);
+        doTransfer(newMessage, newQueue, delay).subscribeWith(ackingComplete);
     }
 
-    private Completable doTransfer(T newMessage, String newQueueUrl, Duration delay) {
-        DeleteMessageRequest deleteRequest = new DeleteMessageRequest()
-                .withQueueUrl(queueUrl)
-                .withReceiptHandle(receiptId);
+    public void transfer(T newMessage, SqsQueue<T> newQueue){
+        transfer(newMessage, newQueue, Optional.empty());
+    }
 
-        return messagePublisher.publishMessage(newMessage, newQueueUrl, Optional.of(delay))
-                .flatMap((response) -> sqsClient.deleteMessage(deleteRequest))
-                .toCompletable();
+    private Completable doTransfer(T newMessage, SqsQueue<T> newQueue, Optional<Duration> delay) {
+        return newQueue.publishMessage(newMessage, delay)
+                .flatMapCompletable((msgId) -> sqsQueue.deleteMessage(receiptId));
     }
 
     public Single<AckMode> getAckMode() {
@@ -143,8 +122,8 @@ public class MessageAcknowledger<T> {
         return ackingComplete;
     }
 
-    public MessagePublisher<T> getMessagePublisher() {
-        return messagePublisher;
+    public SqsQueue<T> getQueue() {
+        return sqsQueue;
     }
 
     public enum AckMode {

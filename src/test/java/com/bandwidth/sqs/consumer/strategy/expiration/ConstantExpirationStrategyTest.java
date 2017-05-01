@@ -1,10 +1,8 @@
 package com.bandwidth.sqs.consumer.strategy.expiration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
-import com.amazonaws.services.sqs.model.Message;
-import com.bandwidth.sqs.consumer.TimedMessage;
+import com.bandwidth.sqs.queue.SqsMessage;
 
 import org.junit.Test;
 
@@ -12,29 +10,35 @@ import java.time.Duration;
 import java.time.Instant;
 
 public class ConstantExpirationStrategyTest {
+    private static final String MESSAGE_BODY = "message body";
+    private static final String RECEIPT_HANDLE = "a794lhaef";
+    private static final String MESSAGE_ID = "message-id";
     private static final Duration MAX_AGE = Duration.ofMinutes(4);
     private static final Duration NEW_MESSAGE_AGE = Duration.ofMinutes(3);
     private static final Duration EXPIRED_AGE = Duration.ofMinutes(5);
 
-    private final Message messageMock = mock(Message.class);
     private final ConstantExpirationStrategy constantExpirationStrategy = new ConstantExpirationStrategy(MAX_AGE);
 
     @Test
     public void testIsExpiredTrue() {
-        TimedMessage timedMessage = TimedMessage.builder()
-                .message(messageMock)
+        SqsMessage<String> message = SqsMessage.<String>builder()
+                .body(MESSAGE_BODY)
+                .id(MESSAGE_ID)
                 .receivedTime(Instant.now().minus(EXPIRED_AGE))
+                .receiptHandle(RECEIPT_HANDLE)
                 .build();
-        assertThat(constantExpirationStrategy.isExpired(timedMessage)).isTrue();
+
+        assertThat(constantExpirationStrategy.isExpired(message)).isTrue();
     }
 
     @Test
     public void testIsExpiredFalse() {
-        TimedMessage timedMessage = TimedMessage.builder()
-                .message(messageMock)
+        SqsMessage<String> timedMessage = SqsMessage.<String>builder()
+                .body(MESSAGE_BODY)
+                .id(MESSAGE_ID)
                 .receivedTime(Instant.now().minus(NEW_MESSAGE_AGE))
+                .receiptHandle(RECEIPT_HANDLE)
                 .build();
         assertThat(constantExpirationStrategy.isExpired(timedMessage)).isFalse();
     }
-
 }
