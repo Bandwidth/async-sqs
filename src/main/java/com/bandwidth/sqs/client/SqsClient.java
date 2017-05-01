@@ -23,13 +23,13 @@ public class SqsClient<T> {
     private static final String QUEUE_ALREADY_EXISTS = "QueueAlreadyExists";
 
     private final SqsRequestSender requestSender;
-    public final Function<String, T> deserialize;
-    public final Function<T, String> serialize;
+    public final Function<String, T> map;
+    public final Function<T, String> inverseMap;
 
-    public SqsClient(SqsRequestSender requestSender, Function<String, T> deserialize, Function<T, String> serialize) {
+    public SqsClient(SqsRequestSender requestSender, Function<String, T> map, Function<T, String> inverseMap) {
         this.requestSender = requestSender;
-        this.deserialize = deserialize;
-        this.serialize = serialize;
+        this.map = map;
+        this.inverseMap = inverseMap;
     }
 
     /**
@@ -67,7 +67,7 @@ public class SqsClient<T> {
         Single<SqsQueue<T>> output = requestSender.sendRequest(action).map(createQueueResult -> {
             SqsQueue<String> rawQueue = new BufferedStringSqsQueue(createQueueResult.getQueueUrl(), requestSender,
                     clientConfig, Optional.of(queueConfig.getAttributes()));
-            return new MappingSqsQueue<>(rawQueue, deserialize, serialize);
+            return new MappingSqsQueue<>(rawQueue, map, inverseMap);
         });
         return output.onErrorResumeNext((err) -> {
             if (err instanceof AmazonSQSException) {
@@ -111,6 +111,6 @@ public class SqsClient<T> {
 
     private SqsQueue<T> getQueueFromUrl(String queueUrl, SqsQueueClientConfig clientConfig) {
         SqsQueue<String> rawQueue = new BufferedStringSqsQueue(queueUrl, requestSender, clientConfig, Optional.empty());
-        return new MappingSqsQueue<>(rawQueue, deserialize, serialize);
+        return new MappingSqsQueue<>(rawQueue, map, inverseMap);
     }
 }
