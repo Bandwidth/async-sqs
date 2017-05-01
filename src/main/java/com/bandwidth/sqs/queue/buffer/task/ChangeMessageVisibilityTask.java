@@ -1,14 +1,11 @@
 package com.bandwidth.sqs.queue.buffer.task;
 
-import com.bandwidth.sqs.actions.ChangeMessageVisibilityBatchAction;
+import com.bandwidth.sqs.action.ChangeMessageVisibilityBatchAction;
 import com.bandwidth.sqs.queue.entry.ChangeMessageVisibilityEntry;
-import com.bandwidth.sqs.actions.sender.SqsRequestSender;
+import com.bandwidth.sqs.action.sender.SqsRequestSender;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.IntStream;
 
 public class ChangeMessageVisibilityTask implements Task<String, ChangeMessageVisibilityEntry> {
 
