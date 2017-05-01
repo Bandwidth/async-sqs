@@ -26,8 +26,7 @@ public class SqsClient<T> {
     public final Function<String, T> deserialize;
     public final Function<T, String> serialize;
 
-    public SqsClient(SqsRequestSender requestSender, Function<String, T> deserialize,
-            Function<T, String> serialize) {
+    public SqsClient(SqsRequestSender requestSender, Function<String, T> deserialize, Function<T, String> serialize) {
         this.requestSender = requestSender;
         this.deserialize = deserialize;
         this.serialize = serialize;
@@ -39,8 +38,7 @@ public class SqsClient<T> {
      * @param clientConfig Configuration values for the queue client
      * @return an SqsQueue
      */
-    public Single<SqsQueue<T>> getQueueFromName(String queueName, Regions region,
-            SqsQueueClientConfig clientConfig) {
+    public Single<SqsQueue<T>> getQueueFromName(String queueName, Regions region, SqsQueueClientConfig clientConfig) {
         GetQueueUrlAction action = new GetQueueUrlAction(queueName, region);
         return requestSender.sendRequest(action)
                 .map(GetQueueUrlResult::getQueueUrl)

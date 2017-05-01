@@ -52,10 +52,16 @@ public class SqsClientBuilder<T> {
     }
 
 
-    public <U> SqsClientBuilder<U> serialize(Function<T, U> newDeserialize, Function<U, T> newSerialize) {
+    /**
+     * Converts the builder to a different type by defining mapping functions between the original and new type
+     *
+     * @param newDeserialize Map from the original value, to the new value
+     * @param newSerialize   Map from the new value, back to the original value
+     */
+    public <U> SqsClientBuilder<U> map(Function<T, U> newDeserialize, Function<U, T> newSerialize) {
         Function<String, U> stringDeserializer = string -> newDeserialize.apply(deserialize.apply(string));
         Function<U, String> stringSerializer = data -> serialize.apply(newSerialize.apply(data));
-        return new SqsClientBuilder<U>(stringDeserializer, stringSerializer)
+        return new SqsClientBuilder<>(stringDeserializer, stringSerializer)
                 .retryCount(retryCount)
                 .credentialsProvider(credentialsProvider)
                 .httpClient(httpClient);
