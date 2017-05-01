@@ -12,13 +12,13 @@ import com.amazonaws.services.sqs.model.AmazonSQSException;
 import com.amazonaws.services.sqs.model.CreateQueueResult;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.amazonaws.services.sqs.model.SetQueueAttributesResult;
-import com.bandwidth.sqs.actions.CreateQueueAction;
-import com.bandwidth.sqs.actions.GetQueueUrlAction;
-import com.bandwidth.sqs.actions.SetQueueAttributesAction;
+import com.bandwidth.sqs.action.CreateQueueAction;
+import com.bandwidth.sqs.action.GetQueueUrlAction;
+import com.bandwidth.sqs.action.SetQueueAttributesAction;
 import com.bandwidth.sqs.queue.SqsQueue;
 import com.bandwidth.sqs.queue.SqsQueueAttributes;
 import com.bandwidth.sqs.queue.SqsQueueConfig;
-import com.bandwidth.sqs.actions.sender.SqsRequestSender;
+import com.bandwidth.sqs.action.sender.SqsRequestSender;
 
 import org.junit.Test;
 

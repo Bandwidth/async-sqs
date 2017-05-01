@@ -3,14 +3,14 @@ package com.bandwidth.sqs.client;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.model.AmazonSQSException;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
-import com.bandwidth.sqs.actions.CreateQueueAction;
-import com.bandwidth.sqs.actions.GetQueueUrlAction;
-import com.bandwidth.sqs.actions.sender.SqsRequestSender;
 import com.bandwidth.sqs.queue.SerializingSqsQueue;
 import com.bandwidth.sqs.queue.SqsQueue;
 import com.bandwidth.sqs.queue.SqsQueueClientConfig;
 import com.bandwidth.sqs.queue.SqsQueueConfig;
 import com.bandwidth.sqs.queue.buffer.BufferedStringSqsQueue;
+import com.bandwidth.sqs.action.CreateQueueAction;
+import com.bandwidth.sqs.action.GetQueueUrlAction;
+import com.bandwidth.sqs.action.sender.SqsRequestSender;
 
 import java.text.MessageFormat;
 import java.util.Optional;
