@@ -2,9 +2,9 @@ package com.bandwidth.sqs.client;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.bandwidth.sqs.actions.sender.BaseSqsRequestSender;
-import com.bandwidth.sqs.actions.sender.RetryingSqsRequestSender;
-import com.bandwidth.sqs.actions.sender.SqsRequestSender;
+import com.bandwidth.sqs.action.sender.BaseSqsRequestSender;
+import com.bandwidth.sqs.action.sender.RetryingSqsRequestSender;
+import com.bandwidth.sqs.action.sender.SqsRequestSender;
 
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClient;

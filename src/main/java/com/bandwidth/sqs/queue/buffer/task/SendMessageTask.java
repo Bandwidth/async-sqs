@@ -1,14 +1,11 @@
 package com.bandwidth.sqs.queue.buffer.task;
 
-import com.bandwidth.sqs.actions.SendMessageBatchAction;
+import com.bandwidth.sqs.action.SendMessageBatchAction;
 import com.bandwidth.sqs.queue.entry.SendMessageEntry;
-import com.bandwidth.sqs.actions.sender.SqsRequestSender;
+import com.bandwidth.sqs.action.sender.SqsRequestSender;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.IntStream;
 
 public class SendMessageTask implements Task<String, SendMessageEntry> {
 

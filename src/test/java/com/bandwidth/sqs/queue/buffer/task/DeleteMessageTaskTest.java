@@ -10,7 +10,7 @@ import com.google.common.collect.ImmutableMap;
 import com.amazonaws.services.sqs.model.BatchResultErrorEntry;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchResult;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchResultEntry;
-import com.bandwidth.sqs.actions.sender.SqsRequestSender;
+import com.bandwidth.sqs.action.sender.SqsRequestSender;
 import com.bandwidth.sqs.queue.entry.DeleteMessageEntry;
 
 import org.junit.Test;

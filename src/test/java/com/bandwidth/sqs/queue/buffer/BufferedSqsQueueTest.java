@@ -11,18 +11,16 @@ import static org.mockito.Mockito.when;
 import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
-import com.bandwidth.sqs.actions.GetQueueAttributesAction;
-import com.bandwidth.sqs.actions.ReceiveMessagesAction;
+import com.bandwidth.sqs.action.GetQueueAttributesAction;
+import com.bandwidth.sqs.action.ReceiveMessagesAction;
 import com.bandwidth.sqs.queue.SqsMessage;
 import com.bandwidth.sqs.queue.SqsQueue;
 import com.bandwidth.sqs.queue.SqsQueueAttributes;
 import com.bandwidth.sqs.queue.SqsQueueClientConfig;
-import com.bandwidth.sqs.queue.buffer.BufferedSqsQueue;
 import com.bandwidth.sqs.queue.entry.ChangeMessageVisibilityEntry;
 import com.bandwidth.sqs.queue.entry.DeleteMessageEntry;
 import com.bandwidth.sqs.queue.entry.SendMessageEntry;
-import com.bandwidth.sqs.queue.buffer.KeyedTaskBuffer;
-import com.bandwidth.sqs.actions.sender.SqsRequestSender;
+import com.bandwidth.sqs.action.sender.SqsRequestSender;
 
 import org.junit.Test;
 

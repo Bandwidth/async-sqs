@@ -11,7 +11,7 @@ import com.google.common.collect.ImmutableMap;
 import com.amazonaws.services.sqs.model.BatchResultErrorEntry;
 import com.amazonaws.services.sqs.model.SendMessageBatchResult;
 import com.amazonaws.services.sqs.model.SendMessageBatchResultEntry;
-import com.bandwidth.sqs.actions.sender.SqsRequestSender;
+import com.bandwidth.sqs.action.sender.SqsRequestSender;
 import com.bandwidth.sqs.queue.entry.SendMessageEntry;
 
 import org.junit.Test;

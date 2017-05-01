@@ -2,9 +2,9 @@ package com.bandwidth.sqs.queue.buffer;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import com.bandwidth.sqs.actions.GetQueueAttributesAction;
-import com.bandwidth.sqs.actions.ReceiveMessagesAction;
-import com.bandwidth.sqs.actions.SetQueueAttributesAction;
+import com.bandwidth.sqs.action.GetQueueAttributesAction;
+import com.bandwidth.sqs.action.ReceiveMessagesAction;
+import com.bandwidth.sqs.action.SetQueueAttributesAction;
 import com.bandwidth.sqs.queue.ImmutableSqsMessage;
 import com.bandwidth.sqs.queue.SqsMessage;
 import com.bandwidth.sqs.queue.SqsQueue;
@@ -13,8 +13,7 @@ import com.bandwidth.sqs.queue.SqsQueueClientConfig;
 import com.bandwidth.sqs.queue.buffer.task.ChangeMessageVisibilityTask;
 import com.bandwidth.sqs.queue.buffer.task.DeleteMessageTask;
 import com.bandwidth.sqs.queue.buffer.task.SendMessageTask;
-import com.bandwidth.sqs.queue.buffer.KeyedTaskBuffer;
-import com.bandwidth.sqs.actions.sender.SqsRequestSender;
+import com.bandwidth.sqs.action.sender.SqsRequestSender;
 import com.bandwidth.sqs.queue.entry.ChangeMessageVisibilityEntry;
 import com.bandwidth.sqs.queue.entry.DeleteMessageEntry;
 import com.bandwidth.sqs.queue.entry.SendMessageEntry;
