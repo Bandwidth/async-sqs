@@ -103,7 +103,7 @@ public class SqsConsumerTest {
             messageBufferFull.push(SQS_MESSAGE);
         }
         when(backoffStrategyMock.getDelayTime(anyDouble())).thenReturn(Duration.ZERO);
-        when(sqsQueueMock.receiveMessages(anyInt(), any())).thenReturn(Single.never());
+        when(sqsQueueMock.receiveMessages(anyInt(), any(Optional.class))).thenReturn(Single.never());
         when(sqsQueueMock.deleteMessage((String) any())).thenReturn(Completable.never());
 
     }
@@ -153,7 +153,7 @@ public class SqsConsumerTest {
                 .build();
         consumer.setMessageBuffer(messageBufferSmall);
         consumer.start();//buffer is full, no requests will be started
-        verify(sqsQueueMock, never()).receiveMessages(anyInt(), any());
+        verify(sqsQueueMock, never()).receiveMessages(anyInt(), any(Optional.class));
     }
 
     @Test
@@ -313,7 +313,7 @@ public class SqsConsumerTest {
         SingleSubject<List<SqsMessage<String>>> singleSubject = SingleSubject.create();
 
         when(sqsQueueMock.deleteMessage(any(String.class))).thenReturn(Completable.complete());
-        when(sqsQueueMock.receiveMessages(anyInt(), any())).thenReturn(singleSubject);
+        when(sqsQueueMock.receiveMessages(anyInt(), any(Optional.class))).thenReturn(singleSubject);
 
         consumer.setMessageBuffer(messageBufferSmall);
         consumer.processNextMessage();
@@ -331,7 +331,7 @@ public class SqsConsumerTest {
         SingleSubject<List<SqsMessage<String>>> singleSubject = SingleSubject.create();
 
         when(sqsQueueMock.deleteMessage(any(String.class))).thenReturn(Completable.complete());
-        when(sqsQueueMock.receiveMessages(anyInt(), any())).thenReturn(singleSubject);
+        when(sqsQueueMock.receiveMessages(anyInt(), any(Optional.class))).thenReturn(singleSubject);
 
         doAnswer((invocation -> {
             ((MessageAcknowledger) invocation.getArgument(1)).delete();
@@ -352,7 +352,7 @@ public class SqsConsumerTest {
         SingleSubject<List<SqsMessage<String>>> singleSubject = SingleSubject.create();
 
         when(sqsQueueMock.deleteMessage(any(String.class))).thenReturn(Completable.complete());
-        when(sqsQueueMock.receiveMessages(anyInt(), any())).thenReturn(singleSubject);
+        when(sqsQueueMock.receiveMessages(anyInt(), any(Optional.class))).thenReturn(singleSubject);
 
         doAnswer((invocation -> {
             ((MessageAcknowledger) invocation.getArgument(1)).ignore();

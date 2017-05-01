@@ -3,7 +3,7 @@ package com.bandwidth.sqs.client;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.model.AmazonSQSException;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
-import com.bandwidth.sqs.queue.SerializingSqsQueue;
+import com.bandwidth.sqs.queue.MappingSqsQueue;
 import com.bandwidth.sqs.queue.SqsQueue;
 import com.bandwidth.sqs.queue.SqsQueueClientConfig;
 import com.bandwidth.sqs.queue.SqsQueueConfig;
@@ -23,14 +23,13 @@ public class SqsClient<T> {
     private static final String QUEUE_ALREADY_EXISTS = "QueueAlreadyExists";
 
     private final SqsRequestSender requestSender;
-    public final Function<String, T> deserialize;
-    public final Function<T, String> serialize;
+    public final Function<String, T> map;
+    public final Function<T, String> inverseMap;
 
-    public SqsClient(SqsRequestSender requestSender, Function<String, T> deserialize,
-            Function<T, String> serialize) {
+    public SqsClient(SqsRequestSender requestSender, Function<String, T> map, Function<T, String> inverseMap) {
         this.requestSender = requestSender;
-        this.deserialize = deserialize;
-        this.serialize = serialize;
+        this.map = map;
+        this.inverseMap = inverseMap;
     }
 
     /**
@@ -39,8 +38,7 @@ public class SqsClient<T> {
      * @param clientConfig Configuration values for the queue client
      * @return an SqsQueue
      */
-    public Single<SqsQueue<T>> getQueueFromName(String queueName, Regions region,
-            SqsQueueClientConfig clientConfig) {
+    public Single<SqsQueue<T>> getQueueFromName(String queueName, Regions region, SqsQueueClientConfig clientConfig) {
         GetQueueUrlAction action = new GetQueueUrlAction(queueName, region);
         return requestSender.sendRequest(action)
                 .map(GetQueueUrlResult::getQueueUrl)
@@ -69,7 +67,7 @@ public class SqsClient<T> {
         Single<SqsQueue<T>> output = requestSender.sendRequest(action).map(createQueueResult -> {
             SqsQueue<String> rawQueue = new BufferedStringSqsQueue(createQueueResult.getQueueUrl(), requestSender,
                     clientConfig, Optional.of(queueConfig.getAttributes()));
-            return new SerializingSqsQueue<>(rawQueue, deserialize, serialize);
+            return new MappingSqsQueue<>(rawQueue, map, inverseMap);
         });
         return output.onErrorResumeNext((err) -> {
             if (err instanceof AmazonSQSException) {
@@ -113,6 +111,6 @@ public class SqsClient<T> {
 
     private SqsQueue<T> getQueueFromUrl(String queueUrl, SqsQueueClientConfig clientConfig) {
         SqsQueue<String> rawQueue = new BufferedStringSqsQueue(queueUrl, requestSender, clientConfig, Optional.empty());
-        return new SerializingSqsQueue<>(rawQueue, deserialize, serialize);
+        return new MappingSqsQueue<>(rawQueue, map, inverseMap);
     }
 }

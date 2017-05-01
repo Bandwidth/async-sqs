@@ -9,17 +9,17 @@ import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.functions.Function;
 
-public class SerializingSqsQueue<A, B> implements SqsQueue<B> {
+public class MappingSqsQueue<T, U> implements SqsQueue<U> {
 
-    private final SqsQueue<A> delegate;
-    private final Function<A, B> deserialize;
-    private final Function<B, A> serialize;
+    private final SqsQueue<T> delegate;
+    private final Function<T, U> map;
+    private final Function<U, T> inverseMap;
 
 
-    public SerializingSqsQueue(SqsQueue<A> delegate, Function<A, B> deserialize, Function<B, A> serialize) {
+    public MappingSqsQueue(SqsQueue<T> delegate, Function<T, U> map, Function<U, T> inverseMap) {
         this.delegate = delegate;
-        this.deserialize = deserialize;
-        this.serialize = serialize;
+        this.map = map;
+        this.inverseMap = inverseMap;
     }
 
     @Override
@@ -33,21 +33,21 @@ public class SerializingSqsQueue<A, B> implements SqsQueue<B> {
     }
 
     @Override
-    public Single<List<SqsMessage<B>>> receiveMessages(int maxMessages, Optional<Duration> waitTime,
+    public Single<List<SqsMessage<U>>> receiveMessages(int maxMessages, Optional<Duration> waitTime,
             Optional<Duration> visibilityTimeout) {
         return delegate.receiveMessages(maxMessages, waitTime, visibilityTimeout).map(sqsMessages -> {
-            //can't stream/map here since deserialize could throw checked exception
-            List<SqsMessage<B>> serializedList = new ArrayList<>();
-            for (SqsMessage<A> sqsMessage : sqsMessages) {
-                serializedList.add(SqsMessage.<B>builder()
+            //can't stream/map here since map could throw checked exception
+            List<SqsMessage<U>> mappedList = new ArrayList<>();
+            for (SqsMessage<T> sqsMessage : sqsMessages) {
+                mappedList.add(SqsMessage.<U>builder()
                         .receiptHandle(sqsMessage.getReceiptHandle())
                         .receivedTime(sqsMessage.getReceivedTime())
                         .id(sqsMessage.getId())
-                        .body(deserialize.apply(sqsMessage.getBody()))
+                        .body(map.apply(sqsMessage.getBody()))
                         .build()
                 );
             }
-            return serializedList;
+            return mappedList;
         });
     }
 
@@ -67,9 +67,9 @@ public class SerializingSqsQueue<A, B> implements SqsQueue<B> {
     }
 
     @Override
-    public Single<String> publishMessage(B body, Optional<Duration> maybeDelay) {
+    public Single<String> publishMessage(U body, Optional<Duration> maybeDelay) {
         return Single.defer(() -> {
-            A serializedBody = serialize.apply(body);
+            T serializedBody = inverseMap.apply(body);
             return delegate.publishMessage(serializedBody, maybeDelay);
         });
     }
