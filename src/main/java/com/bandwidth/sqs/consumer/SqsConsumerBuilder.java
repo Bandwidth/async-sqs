@@ -7,13 +7,13 @@ import com.bandwidth.sqs.consumer.strategy.expiration.ExpirationStrategy;
 import com.bandwidth.sqs.consumer.strategy.expiration.NeverExpiresStrategy;
 import com.bandwidth.sqs.queue.SqsQueue;
 
-public class SqsConsumerBuilder {
+public class SqsConsumerBuilder<T> {
     public static final int DEFAULT_NUM_PERMITS = 500;
     public static final int DEFAULT_BUFFER_SIZE = 640;
 
     final SqsConsumerManager consumerManager;
-    final SqsQueue<String> sqsQueue;
-    final ConsumerHandler<String> consumerHandler;
+    final SqsQueue<T> sqsQueue;
+    final ConsumerHandler<T> consumerHandler;
 
     int numPermits = DEFAULT_NUM_PERMITS;
     int bufferSize = DEFAULT_BUFFER_SIZE;
@@ -27,17 +27,14 @@ public class SqsConsumerBuilder {
      *                        handler is limited by `numPermits`. You *MUST* either `ack()` or `nack()` EVERY message
      *                        using the provided MessageAcknowledger to allow more messages to be processed.
      */
-    public SqsConsumerBuilder(SqsConsumerManager manager, SqsQueue<String> sqsQueue, ConsumerHandler<String>
-            consumerHandler) {
+    public SqsConsumerBuilder(SqsConsumerManager manager, SqsQueue<T> sqsQueue, ConsumerHandler<T> consumerHandler) {
         this.consumerManager = manager;
         this.sqsQueue = sqsQueue;
         this.consumerHandler = consumerHandler;
-
     }
 
-
-    public SqsConsumer build() {
-        return new SqsConsumer(this);
+    public SqsConsumer<T> build() {
+        return new SqsConsumer<>(this);
     }
 
     /**
@@ -78,6 +75,4 @@ public class SqsConsumerBuilder {
         this.expirationStrategy = expirationStrategy;
         return this;
     }
-
-
 }

@@ -34,7 +34,7 @@ import io.reactivex.subjects.CompletableSubject;
 
 import static com.bandwidth.sqs.consumer.acknowledger.MessageAcknowledger.AckMode;
 
-public class SqsConsumer {
+public class SqsConsumer<T> {
     public static final int NUM_MESSAGES_PER_REQUEST = 10;
     public static final Duration LOAD_BALANCED_REQUEST_WAIT_TIME = Duration.ofSeconds(1);
     public static final Duration MAX_WAIT_TIME = Duration.ofSeconds(20);
@@ -47,10 +47,10 @@ public class SqsConsumer {
 
     private static final Logger LOG = LoggerFactory.getLogger(SqsConsumer.class);
 
-    private final SqsQueue<String> sqsQueue;
+    private final SqsQueue<T> sqsQueue;
     private final AtomicInteger maxPermits;
     private final AtomicInteger remainingPermits;
-    private final ConsumerHandler<String> handler;
+    private final ConsumerHandler<T> handler;
 
     private final int maxQueueSize;
     private final BackoffStrategy backoffStrategy;
@@ -61,7 +61,7 @@ public class SqsConsumer {
     private final CompletableSubject shutdownCompletable = CompletableSubject.create();
     private final Disposable permitChangeDisposable;
 
-    private ArrayDeque<SqsMessage<String>> messageBuffer = new ArrayDeque<>();
+    private ArrayDeque<SqsMessage<T>> messageBuffer = new ArrayDeque<>();
     private boolean waitingInQueue = false;
     private TimeWindowAverage failureAverage = null;
     private Instant backoffEndTime = Instant.EPOCH;
@@ -75,7 +75,7 @@ public class SqsConsumer {
      * is normally needed per SQS Queue. A single long-polling request is always in-flight for each consumer in addition
      * to the load-balanced requests configured in the `SqsConsumerManager`.
      */
-    public SqsConsumer(SqsConsumerBuilder builder) {
+    public SqsConsumer(SqsConsumerBuilder<T> builder) {
         this.handler = requireNonNull(builder.consumerHandler);
         this.backoffStrategy = requireNonNull(builder.backoffStrategy);
         this.manager = requireNonNull(builder.consumerManager);
@@ -97,7 +97,7 @@ public class SqsConsumer {
         this.loadBalanceStrategy = strategy;
     }
 
-    public SqsQueue<String> getQueue() {
+    public SqsQueue<T> getQueue() {
         return sqsQueue;
     }
 
@@ -183,7 +183,7 @@ public class SqsConsumer {
                 && remainingPermits.get() == maxPermits.get();
     }
 
-    void setMessageBuffer(ArrayDeque<SqsMessage<String>> messageBuffer) {
+    void setMessageBuffer(ArrayDeque<SqsMessage<T>> messageBuffer) {
         this.messageBuffer = messageBuffer;
     }
 
@@ -216,7 +216,7 @@ public class SqsConsumer {
         }
     }
 
-    private synchronized void addMessagesToBuffer(List<SqsMessage<String>> messages) {
+    private synchronized void addMessagesToBuffer(List<SqsMessage<T>> messages) {
         if (!messages.isEmpty()) {
             messageBuffer.addAll(messages);
             update();
@@ -244,8 +244,8 @@ public class SqsConsumer {
         }
     }
 
-    private synchronized SqsMessage<String> getNextMessage() {
-        SqsMessage<String> message = messageBuffer.pop();
+    private synchronized SqsMessage<T> getNextMessage() {
+        SqsMessage<T> message = messageBuffer.pop();
         waitingInQueue = false;
 
         boolean expired = expirationStrategy.isExpired(message);
@@ -262,11 +262,11 @@ public class SqsConsumer {
 
     void processNextMessage() {
 
-        SqsMessage<String> message = getNextMessage();
+        SqsMessage<T> message = getNextMessage();
         if (message == null) {
             return;
         }
-        MessageAcknowledger<String> acknowledger = new MessageAcknowledger<>(sqsQueue, message.getReceiptHandle());
+        MessageAcknowledger<T> acknowledger = new MessageAcknowledger<>(sqsQueue, message.getReceiptHandle());
 
         Completable.fromRunnable(() -> handler.handleMessage(message, acknowledger))
                 .andThen(acknowledger.getAckMode())
@@ -315,7 +315,7 @@ public class SqsConsumer {
         }
     }
 
-    public class ReceiveMessageHandler implements SingleObserver<List<SqsMessage<String>>> {
+    public class ReceiveMessageHandler implements SingleObserver<List<SqsMessage<T>>> {
         RequestType requestType;
 
         public ReceiveMessageHandler(RequestType requestType) {
@@ -327,7 +327,7 @@ public class SqsConsumer {
         }
 
         @Override
-        public void onSuccess(List<SqsMessage<String>> messages) {
+        public void onSuccess(List<SqsMessage<T>> messages) {
             addMessagesToBuffer(messages);
             updateLoadBalanceRequests(messages.size());
             always();
