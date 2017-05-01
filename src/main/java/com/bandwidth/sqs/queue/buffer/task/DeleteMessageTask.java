@@ -1,9 +1,8 @@
 package com.bandwidth.sqs.queue.buffer.task;
 
 import com.bandwidth.sqs.actions.DeleteMessageBatchAction;
-import com.bandwidth.sqs.queue.buffer.entry.DeleteMessageEntry;
-import com.bandwidth.sqs.queue.buffer.task_buffer.Task;
-import com.bandwidth.sqs.request_sender.SqsRequestSender;
+import com.bandwidth.sqs.queue.entry.DeleteMessageEntry;
+import com.bandwidth.sqs.actions.sender.SqsRequestSender;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,12 +19,7 @@ public class DeleteMessageTask implements Task<String, DeleteMessageEntry> {
     }
 
     @Override
-    public void run(String queueUrl, List<DeleteMessageEntry> entries) {
-        Map<String, DeleteMessageEntry> entryMap = new HashMap<>();
-        IntStream.range(0, entries.size()).forEach((id) -> {
-            entryMap.put(Integer.toString(id), entries.get(id));
-        });
-
+    public void run(String queueUrl, Map<String, DeleteMessageEntry> entryMap) {
         DeleteMessageBatchAction action = new DeleteMessageBatchAction(queueUrl, entryMap);
 
         requestSender.sendRequest(action).subscribe((result) -> {
@@ -40,7 +34,7 @@ public class DeleteMessageTask implements Task<String, DeleteMessageEntry> {
                         });
             });
         }, (err) -> {//the entire batch operation failed
-            entries.forEach((entry) -> entry.getResultSubject().onError(err));
+            entryMap.values().forEach((entry) -> entry.getResultSubject().onError(err));
         });
     }
 }

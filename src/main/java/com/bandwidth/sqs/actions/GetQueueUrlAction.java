@@ -1,11 +1,13 @@
 package com.bandwidth.sqs.actions;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.amazonaws.services.sqs.model.transform.GetQueueUrlRequestMarshaller;
 import com.amazonaws.services.sqs.model.transform.GetQueueUrlResultStaxUnmarshaller;
-import com.bandwidth.sqs.actions.aws_sdk_adapter.SqsAwsSdkAction;
+import com.bandwidth.sqs.actions.adapter.SqsAwsSdkAction;
 import com.bandwidth.sqs.client.SqsClient;
 
 public class GetQueueUrlAction extends SqsAwsSdkAction<GetQueueUrlRequest, GetQueueUrlResult> {
@@ -16,7 +18,8 @@ public class GetQueueUrlAction extends SqsAwsSdkAction<GetQueueUrlRequest, GetQu
                 new GetQueueUrlResultStaxUnmarshaller());
     }
 
-    private static GetQueueUrlRequest createRequest(String queueName) {
+    @VisibleForTesting
+    static GetQueueUrlRequest createRequest(String queueName) {
         return new GetQueueUrlRequest().withQueueName(queueName);
 
     }

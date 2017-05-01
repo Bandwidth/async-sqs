@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableMap;
 
 import com.amazonaws.services.sqs.model.ChangeMessageVisibilityBatchRequest;
-import com.bandwidth.sqs.queue.buffer.entry.ChangeMessageVisibilityEntry;
+import com.bandwidth.sqs.queue.entry.ChangeMessageVisibilityEntry;
 
 import org.junit.Test;
 

@@ -18,13 +18,13 @@ public class ConsumerManagerTest {
     private static final int MAX_LOAD_BALANCED_REQUESTS = 2;
 
     private final ExecutorService threadPoolMock = mock(ExecutorService.class);
-    private final Consumer consumerMock = mock(Consumer.class);
-    private final Consumer consumerMock2 = mock(Consumer.class);
+    private final SqsConsumer consumerMock = mock(SqsConsumer.class);
+    private final SqsConsumer consumerMock2 = mock(SqsConsumer.class);
 
-    private ConsumerManager consumerManager;
+    private SqsConsumerManager consumerManager;
 
     public ConsumerManagerTest() {
-        consumerManager = new ConsumerManager(MAX_LOAD_BALANCED_REQUESTS, threadPoolMock);
+        consumerManager = new SqsConsumerManager(MAX_LOAD_BALANCED_REQUESTS, threadPoolMock);
         consumerManager.addConsumer(consumerMock);
         consumerManager.addConsumer(consumerMock2);
     }
