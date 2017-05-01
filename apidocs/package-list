@@ -1,5 +1,7 @@
+com.bandwidth.sqs.action
+com.bandwidth.sqs.action.adapter
+com.bandwidth.sqs.action.sender
 com.bandwidth.sqs.client
-com.bandwidth.sqs.client.buffered
 com.bandwidth.sqs.consumer
 com.bandwidth.sqs.consumer.acknowledger
 com.bandwidth.sqs.consumer.handler
@@ -7,3 +9,7 @@ com.bandwidth.sqs.consumer.strategy.backoff
 com.bandwidth.sqs.consumer.strategy.expiration
 com.bandwidth.sqs.consumer.strategy.loadbalance
 com.bandwidth.sqs.publisher
+com.bandwidth.sqs.queue
+com.bandwidth.sqs.queue.buffer
+com.bandwidth.sqs.queue.buffer.task
+com.bandwidth.sqs.queue.entry
