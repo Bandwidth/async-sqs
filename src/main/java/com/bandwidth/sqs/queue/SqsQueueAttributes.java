@@ -1,16 +1,11 @@
 package com.bandwidth.sqs.queue;
 
-import com.google.common.collect.ImmutableMap;
-
 import com.amazonaws.services.sqs.model.QueueAttributeName;
 
-import org.immutables.value.Value.Derived;
 import org.immutables.value.Value.Immutable;
-import org.immutables.value.Value.Default;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.Optional;
 
 @Immutable
 public abstract class SqsQueueAttributes {
