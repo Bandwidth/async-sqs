@@ -11,6 +11,7 @@ import com.bandwidth.sqs.consumer.strategy.backoff.BackoffStrategy;
 import com.bandwidth.sqs.consumer.handler.ConsumerHandler;
 import com.bandwidth.sqs.queue.SqsMessage;
 import com.bandwidth.sqs.queue.SqsQueue;
+import com.bandwidth.sqs.queue.SqsQueueAttributes;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +61,7 @@ public class SqsConsumer<T> {
     private final AtomicBoolean longPollRequestInFlight = new AtomicBoolean(false);
     private final CompletableSubject shutdownCompletable = CompletableSubject.create();
     private final Disposable permitChangeDisposable;
+    private final SqsQueueAttributes queueAttributes;
 
     private ArrayDeque<SqsMessage<T>> messageBuffer = new ArrayDeque<>();
     private boolean waitingInQueue = false;
@@ -82,6 +84,7 @@ public class SqsConsumer<T> {
         this.expirationStrategy = requireNonNull(builder.expirationStrategy);
 
         this.sqsQueue = builder.sqsQueue;
+        this.queueAttributes = sqsQueue.getAttributes().blockingGet();
         this.maxPermits = new AtomicInteger(builder.numPermits);
         this.remainingPermits = new AtomicInteger(builder.numPermits);
         this.maxQueueSize = Math.max(NUM_MESSAGES_PER_REQUEST, builder.bufferSize);
@@ -282,11 +285,12 @@ public class SqsConsumer<T> {
                     }
                 });
 
-        //TODO: add a timeout here to guarantee the permit is released (future PR)
-        acknowledger.getCompletable().doFinally(() -> {
-            remainingPermits.incrementAndGet();
-            update();
-        }).subscribe();
+        acknowledger.getCompletable()
+                .timeout(queueAttributes.getVisibilityTimeout().getSeconds(), TimeUnit.SECONDS)
+                .doFinally(() -> {
+                    remainingPermits.incrementAndGet();
+                    update();
+                }).subscribe();
     }
 
     public enum RequestType {

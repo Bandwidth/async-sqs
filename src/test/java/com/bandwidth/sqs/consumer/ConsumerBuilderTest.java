@@ -1,5 +1,7 @@
 package com.bandwidth.sqs.consumer;
 
+import static com.bandwidth.sqs.queue.SqsQueueAttributeChangesTest.ATTRIBUTES;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -15,6 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 
 @SuppressWarnings("unchecked")
 public class ConsumerBuilderTest {
@@ -28,11 +31,13 @@ public class ConsumerBuilderTest {
     private final BackoffStrategy backoffStrategy = new NullBackoffStrategy();
     private final ExpirationStrategy expirationStrategy = new NeverExpiresStrategy();
 
-    private final SqsConsumerBuilder builder = new SqsConsumerBuilder(consumerManagerMock, sqsQueueMock, consumerHandlerMock);
+    private final SqsConsumerBuilder builder = new SqsConsumerBuilder(consumerManagerMock, sqsQueueMock,
+            consumerHandlerMock);
 
     @Before
     public void setup() {
         when(consumerHandlerMock.getPermitChangeRequests()).thenReturn(Observable.never());
+        when(sqsQueueMock.getAttributes()).thenReturn(Single.just(ATTRIBUTES));
     }
 
     @Test
