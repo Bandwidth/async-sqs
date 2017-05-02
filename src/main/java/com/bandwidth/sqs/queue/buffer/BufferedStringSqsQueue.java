@@ -8,6 +8,7 @@ import com.bandwidth.sqs.action.SetQueueAttributesAction;
 import com.bandwidth.sqs.queue.ImmutableSqsMessage;
 import com.bandwidth.sqs.queue.SqsMessage;
 import com.bandwidth.sqs.queue.SqsQueue;
+import com.bandwidth.sqs.queue.SqsQueueAttributeChanges;
 import com.bandwidth.sqs.queue.SqsQueueAttributes;
 import com.bandwidth.sqs.queue.SqsQueueClientConfig;
 import com.bandwidth.sqs.queue.buffer.task.ChangeMessageVisibilityTask;
@@ -21,7 +22,6 @@ import com.bandwidth.sqs.queue.entry.SendMessageEntry;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import io.reactivex.Completable;
@@ -32,24 +32,14 @@ public class BufferedStringSqsQueue implements SqsQueue<String> {
 
     private final String queueUrl;
     private final SqsRequestSender requestSender;
-    private final AtomicReference<Single<SqsQueueAttributes>> attributes = new AtomicReference<>();
 
     private KeyedTaskBuffer<String, SendMessageEntry> sendMessageTaskBuffer;
     private KeyedTaskBuffer<String, DeleteMessageEntry> deleteMessageTaskBuffer;
     private KeyedTaskBuffer<String, ChangeMessageVisibilityEntry> changeMessageVisibilityTaskBuffer;
 
-    public BufferedStringSqsQueue(String queueUrl, SqsRequestSender requestSender, SqsQueueClientConfig clientConfig,
-            Optional<SqsQueueAttributes> queueAttributes) {
+    public BufferedStringSqsQueue(String queueUrl, SqsRequestSender requestSender, SqsQueueClientConfig clientConfig) {
         this.queueUrl = queueUrl;
         this.requestSender = requestSender;
-
-        this.attributes.set(queueAttributes.map(Single::just).orElse(Single.defer(() -> {
-            GetQueueAttributesAction action = new GetQueueAttributesAction(queueUrl);
-            return requestSender.sendRequest(action).map(getQueueAttributesResult -> SqsQueueAttributes.builder()
-                    .fromStringMap(getQueueAttributesResult.getAttributes())
-                    .build()
-            );
-        })).cache());
 
         Duration bufferDelay = clientConfig.getBufferDelay();
         this.sendMessageTaskBuffer =
@@ -67,7 +57,10 @@ public class BufferedStringSqsQueue implements SqsQueue<String> {
 
     @Override
     public Single<SqsQueueAttributes> getAttributes() {
-        return attributes.get();
+        GetQueueAttributesAction action = new GetQueueAttributesAction(queueUrl);
+        return requestSender.sendRequest(action).map(getQueueAttributesResult -> SqsQueueAttributes.builder()
+                .fromStringMap(getQueueAttributesResult.getAttributes())
+                .build());
     }
 
     @Override
@@ -100,12 +93,9 @@ public class BufferedStringSqsQueue implements SqsQueue<String> {
     }
 
     @Override
-    public Completable setAttributes(SqsQueueAttributes newAttributes) {
+    public Completable setAttributes(SqsQueueAttributeChanges newAttributes) {
         SetQueueAttributesAction action = new SetQueueAttributesAction(queueUrl, newAttributes);
-        Completable setAttributesComplete = requestSender.sendRequest(action)
-                .toCompletable();
-        setAttributesComplete.subscribe(() -> attributes.set(Single.just(newAttributes)));
-        return setAttributesComplete;
+        return requestSender.sendRequest(action).toCompletable();
     }
 
     @Override

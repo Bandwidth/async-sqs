@@ -10,17 +10,22 @@ import static org.mockito.Mockito.when;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.model.AmazonSQSException;
 import com.amazonaws.services.sqs.model.CreateQueueResult;
+import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.amazonaws.services.sqs.model.SetQueueAttributesResult;
 import com.bandwidth.sqs.action.CreateQueueAction;
+import com.bandwidth.sqs.action.GetQueueAttributesAction;
 import com.bandwidth.sqs.action.GetQueueUrlAction;
 import com.bandwidth.sqs.action.SetQueueAttributesAction;
 import com.bandwidth.sqs.queue.SqsQueue;
+import com.bandwidth.sqs.queue.SqsQueueAttributeChanges;
 import com.bandwidth.sqs.queue.SqsQueueAttributes;
 import com.bandwidth.sqs.queue.SqsQueueConfig;
 import com.bandwidth.sqs.action.sender.SqsRequestSender;
 
 import org.junit.Test;
+
+import java.time.Duration;
 
 import io.reactivex.Single;
 import io.reactivex.functions.Function;
@@ -30,10 +35,10 @@ public class SqsClientTest {
     private static final String QUEUE_ALREADY_EXISTS = "QueueAlreadyExists";
     private static final String QUEUE_URL = "https://domain.com/12345/queue-name";
     private static final String QUEUE_NAME = "queue-name";
-    private static final SqsQueueAttributes ATTRIBUTES = SqsQueueAttributes.builder().build();
+    private static final SqsQueueAttributeChanges ATTRIBUTE_CHANGES = SqsQueueAttributeChanges.builder().build();
+
     private static final SqsQueueConfig QUEUE_CONFIG = SqsQueueConfig.builder()
             .name(QUEUE_NAME)
-            .attributes(ATTRIBUTES)
             .region(Regions.US_EAST_1)
             .build();
     private static final Function<String, String> NOOP_SERIALIZER = (str) -> str;
@@ -69,7 +74,6 @@ public class SqsClientTest {
 
         SqsQueue<String> queue = client.upsertQueue(QUEUE_CONFIG).blockingGet();
         assertThat(queue.getQueueUrl()).isEqualTo(QUEUE_URL);
-        assertThat(queue.getAttributes().blockingGet()).isEqualTo(ATTRIBUTES);
         verify(requestSenderMock).sendRequest(any(CreateQueueAction.class));
         verifyNoMoreInteractions(requestSenderMock);//make sure getAttributes() was cached
     }
@@ -79,14 +83,11 @@ public class SqsClientTest {
         when(requestSenderMock.sendRequest(any(CreateQueueAction.class))).thenReturn(Single.error(
                 QUEUE_ALREADY_EXISTS_EXCEPTION
         ));
-
         SqsQueue<String> queue = client.upsertQueue(QUEUE_CONFIG).blockingGet();
         assertThat(queue.getQueueUrl()).isEqualTo(QUEUE_URL);
-        assertThat(queue.getAttributes().blockingGet()).isEqualTo(ATTRIBUTES);
         verify(requestSenderMock).sendRequest(any(CreateQueueAction.class));
         verify(requestSenderMock).sendRequest(any(GetQueueUrlAction.class));
         verify(requestSenderMock).sendRequest(any(SetQueueAttributesAction.class));
-        verifyNoMoreInteractions(requestSenderMock);//make sure getAttributes() was cached
     }
 
     @Test

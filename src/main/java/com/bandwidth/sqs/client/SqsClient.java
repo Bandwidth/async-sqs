@@ -66,7 +66,7 @@ public class SqsClient<T> {
         CreateQueueAction action = new CreateQueueAction(queueConfig);
         Single<SqsQueue<T>> output = requestSender.sendRequest(action).map(createQueueResult -> {
             SqsQueue<String> rawQueue = new BufferedStringSqsQueue(createQueueResult.getQueueUrl(), requestSender,
-                    clientConfig, Optional.of(queueConfig.getAttributes()));
+                    clientConfig);
             return new MappingSqsQueue<>(rawQueue, map, inverseMap);
         });
         return output.onErrorResumeNext((err) -> {
@@ -110,7 +110,7 @@ public class SqsClient<T> {
     }
 
     private SqsQueue<T> getQueueFromUrl(String queueUrl, SqsQueueClientConfig clientConfig) {
-        SqsQueue<String> rawQueue = new BufferedStringSqsQueue(queueUrl, requestSender, clientConfig, Optional.empty());
+        SqsQueue<String> rawQueue = new BufferedStringSqsQueue(queueUrl, requestSender, clientConfig);
         return new MappingSqsQueue<>(rawQueue, map, inverseMap);
     }
 }

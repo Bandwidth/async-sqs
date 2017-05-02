@@ -16,59 +16,29 @@ import java.util.Optional;
 public abstract class SqsQueueAttributes {
     /**
      * 0 - 12 hours, in 1 second increments
-     *
-     * Default: 30 seconds
      */
-    @Default
-    public Duration getVisibilityTimeout() {
-        return Duration.ofSeconds(30);
-    }
+    public abstract Duration getVisibilityTimeout();
 
     /**
      * 1 - 256KB, in BYTES
-     *
-     * Default: 262144 (256 KB)
      */
-    @Default
-    public int getMaxMessageBytes() {
-        return 256 * 1024;
-    }
+    public abstract int getMaxMessageBytes();
 
     /**
      * 0 - 15 minutes, in 1 second increments
-     *
-     * Default: 0
      */
-    @Default
-    public Duration getDeliveryDelay() {
-        return Duration.ZERO;
-    }
+    public abstract Duration getDeliveryDelay();
 
     /**
      * The amount of time SQS will ratain a message if it does not get deleted
      * Must be between 1 minute and 14 days
-     *
-     * Default: 4 days
      */
-    @Default
-    public Duration getMessageRetentionPeriod() {
-        return Duration.ofDays(4);
-    }
+    public abstract Duration getMessageRetentionPeriod();
 
-    @Derived
-    public Map<String, String> getStringMap() {
-        //TODO: add deadletter config
-        return ImmutableMap.<String, String>builder()
-                .put(QueueAttributeName.DelaySeconds.toString(),
-                        Long.toString(getDeliveryDelay().getSeconds()))
-                .put(QueueAttributeName.VisibilityTimeout.toString(),
-                        Long.toString(getVisibilityTimeout().getSeconds()))
-                .put(QueueAttributeName.MaximumMessageSize.toString(),
-                        Integer.toString(getMaxMessageBytes()))
-                .put(QueueAttributeName.MessageRetentionPeriod.toString(),
-                        Long.toString(getMessageRetentionPeriod().getSeconds()))
-                .build();
-    }
+    /**
+     * The Amazon Resource Name for this queue
+     */
+    public abstract String getQueueArn();
 
     public static abstract class Builder {
         public ImmutableSqsQueueAttributes.Builder fromStringMap(Map<String, String> map) {
@@ -77,12 +47,14 @@ public abstract class SqsQueueAttributes {
             int messageBytes = Integer.parseInt(map.get(QueueAttributeName.MaximumMessageSize.toString()));
             long messageRetentionSeconds =
                     Long.parseLong(map.get(QueueAttributeName.MessageRetentionPeriod.toString()));
+            String queueArn = map.get(QueueAttributeName.QueueArn.toString());
 
             return builder()
                     .deliveryDelay(Duration.ofSeconds(delaySeconds))
                     .visibilityTimeout(Duration.ofSeconds(visibilitySeconds))
                     .maxMessageBytes(messageBytes)
-                    .messageRetentionPeriod(Duration.ofSeconds(messageRetentionSeconds));
+                    .messageRetentionPeriod(Duration.ofSeconds(messageRetentionSeconds))
+                    .queueArn(queueArn);
         }
     }
 

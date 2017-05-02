@@ -15,6 +15,8 @@ import com.bandwidth.sqs.action.GetQueueAttributesAction;
 import com.bandwidth.sqs.action.ReceiveMessagesAction;
 import com.bandwidth.sqs.queue.SqsMessage;
 import com.bandwidth.sqs.queue.SqsQueue;
+import com.bandwidth.sqs.queue.SqsQueueAttributeChanges;
+import com.bandwidth.sqs.queue.SqsQueueAttributeChangesTest;
 import com.bandwidth.sqs.queue.SqsQueueAttributes;
 import com.bandwidth.sqs.queue.SqsQueueClientConfig;
 import com.bandwidth.sqs.queue.entry.ChangeMessageVisibilityEntry;
@@ -37,7 +39,7 @@ public class BufferedStringSqsQueueTest {
     private static final String MESSAGE_BODY = "message-body";
     private static final String RECEIPT_HANDLE = "receipt-handle";
     private static final SqsQueueClientConfig CLIENT_CONFIG = SqsQueueClientConfig.builder().build();
-    private static final SqsQueueAttributes ATTRIBUTES = SqsQueueAttributes.builder().build();
+    private static final SqsQueueAttributes ATTRIBUTES = SqsQueueAttributeChangesTest.ATTRIBUTES;
     private static final Message SQS_MESSAGE = new Message()
             .withMessageId(MESSAGE_ID)
             .withBody(MESSAGE_BODY)
@@ -50,9 +52,7 @@ public class BufferedStringSqsQueueTest {
             mock(KeyedTaskBuffer.class);
 
     private final BufferedStringSqsQueue queue = new BufferedStringSqsQueue(QUEUE_URL, requestSenderMock,
-            CLIENT_CONFIG, Optional.of(ATTRIBUTES));
-    private final SqsQueue<String> queueWithoutAttributes = new BufferedStringSqsQueue(QUEUE_URL, requestSenderMock,
-            CLIENT_CONFIG, Optional.empty());
+            CLIENT_CONFIG);
 
     public BufferedStringSqsQueueTest() {
         queue.setSendMessageTaskBuffer(sendMessageTaskBufferMock);
@@ -60,7 +60,7 @@ public class BufferedStringSqsQueueTest {
         queue.setChangeMessageVisibilityTaskBuffer(changeMessageVisibilityTaskBufferMock);
 
         when(requestSenderMock.sendRequest(any(GetQueueAttributesAction.class))).thenReturn(Single.just(
-                new GetQueueAttributesResult().withAttributes(ATTRIBUTES.getStringMap())
+                new GetQueueAttributesResult().withAttributes(SqsQueueAttributeChangesTest.ATTRIBUTE_STRING_MAP)
         ));
         when(requestSenderMock.sendRequest(any(ReceiveMessagesAction.class))).thenReturn(Single.just(
                 new ReceiveMessageResult().withMessages(SQS_MESSAGE)
@@ -73,17 +73,9 @@ public class BufferedStringSqsQueueTest {
     }
 
     @Test
-    public void testGetCachedAttributes() {
-        assertThat(queue.getAttributes().blockingGet()).isEqualTo(ATTRIBUTES);
-        verifyZeroInteractions(requestSenderMock);//make sure it was actually cached
-    }
-
-    @Test
     public void testGetNonCachedAttributes() {
-        assertThat(queueWithoutAttributes.getAttributes().blockingGet()).isEqualTo(ATTRIBUTES);
+        queue.getAttributes().test().assertComplete();
         verify(requestSenderMock).sendRequest(any(GetQueueAttributesAction.class));//it was NOT cached
-        assertThat(queueWithoutAttributes.getAttributes().blockingGet()).isEqualTo(ATTRIBUTES);
-        verify(requestSenderMock).sendRequest(any(GetQueueAttributesAction.class));//it WAS cached the 2nd time
     }
 
     @Test
