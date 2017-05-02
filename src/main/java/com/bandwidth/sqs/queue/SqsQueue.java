@@ -24,7 +24,7 @@ public interface SqsQueue<T> extends MessagePublisher<T> {
 
     Completable changeMessageVisibility(String receiptHandle, Duration newVisibility);
 
-    Completable setAttributes(SqsQueueAttributes newAttributes);
+    Completable setAttributes(MutableSqsQueueAttributes attributes);
 
     default Single<List<SqsMessage<T>>> receiveMessages(int maxMessages, Duration waitTime, Duration
             visibilityTimeout) {

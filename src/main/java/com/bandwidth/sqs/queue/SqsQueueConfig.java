@@ -2,6 +2,7 @@ package com.bandwidth.sqs.queue;
 
 import com.amazonaws.regions.Regions;
 
+import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 
 @Immutable
@@ -18,11 +19,15 @@ public abstract class SqsQueueConfig {
     public abstract Regions getRegion();
 
     /**
-     * The queue attributes
+     * The queue attributes that should be set
+     * Any values that are Optional.empty() will be set to the default value
      */
-    public abstract SqsQueueAttributes getAttributes();
+    @Default
+    public MutableSqsQueueAttributes getAttributes() {
+        return MutableSqsQueueAttributes.builder().build();
+    }
 
-    public static ImmutableSqsQueueConfig.Builder builder(){
+    public static ImmutableSqsQueueConfig.Builder builder() {
         return ImmutableSqsQueueConfig.builder();
     }
 }
