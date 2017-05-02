@@ -17,18 +17,14 @@ import java.text.MessageFormat;
 import io.reactivex.Single;
 import io.reactivex.functions.Function;
 
-public class SqsClient<T> {
+public class SqsClient {
 
     private static final String QUEUE_ALREADY_EXISTS = "QueueAlreadyExists";
 
     private final SqsRequestSender requestSender;
-    public final Function<String, T> map;
-    public final Function<T, String> inverseMap;
 
-    public SqsClient(SqsRequestSender requestSender, Function<String, T> map, Function<T, String> inverseMap) {
+    public SqsClient(SqsRequestSender requestSender) {
         this.requestSender = requestSender;
-        this.map = map;
-        this.inverseMap = inverseMap;
     }
 
     /**
@@ -37,7 +33,8 @@ public class SqsClient<T> {
      * @param clientConfig Configuration values for the queue client
      * @return an SqsQueue
      */
-    public Single<SqsQueue<T>> getQueueFromName(String queueName, Regions region, SqsQueueClientConfig clientConfig) {
+    public Single<SqsQueue<String>> getQueueFromName(String queueName, Regions region, SqsQueueClientConfig
+            clientConfig) {
         GetQueueUrlAction action = new GetQueueUrlAction(queueName, region);
         return requestSender.sendRequest(action)
                 .map(GetQueueUrlResult::getQueueUrl)
@@ -49,7 +46,7 @@ public class SqsClient<T> {
      * @param region    Region this queue exists in
      * @return an SqsQueue
      */
-    public Single<SqsQueue<T>> getQueueFromName(String queueName, Regions region) {
+    public Single<SqsQueue<String>> getQueueFromName(String queueName, Regions region) {
         return getQueueFromName(queueName, region, SqsQueueClientConfig.builder().build());
     }
 
@@ -61,12 +58,10 @@ public class SqsClient<T> {
      * @param clientConfig Configuration of the SQS queue client
      * @return an SqsQueue
      */
-    public Single<SqsQueue<T>> upsertQueue(SqsQueueConfig queueConfig, SqsQueueClientConfig clientConfig) {
+    public Single<SqsQueue<String>> upsertQueue(SqsQueueConfig queueConfig, SqsQueueClientConfig clientConfig) {
         CreateQueueAction action = new CreateQueueAction(queueConfig);
-        Single<SqsQueue<T>> output = requestSender.sendRequest(action).map(createQueueResult -> {
-            SqsQueue<String> rawQueue = new BufferedStringSqsQueue(createQueueResult.getQueueUrl(), requestSender,
-                    clientConfig);
-            return new MappingSqsQueue<>(rawQueue, map, inverseMap);
+        Single<SqsQueue<String>> output = requestSender.sendRequest(action).map(createQueueResult -> {
+            return new BufferedStringSqsQueue(createQueueResult.getQueueUrl(), requestSender, clientConfig);
         });
         return output.onErrorResumeNext((err) -> {
             if (err instanceof AmazonSQSException) {
@@ -91,25 +86,19 @@ public class SqsClient<T> {
      * @param queueConfig Configuration of the SQS queue
      * @return an SqsQueue
      */
-    public Single<SqsQueue<T>> upsertQueue(SqsQueueConfig queueConfig) {
+    public Single<SqsQueue<String>> upsertQueue(SqsQueueConfig queueConfig) {
         return upsertQueue(queueConfig, SqsQueueClientConfig.builder().build());
     }
 
-    /**
-     * Returns a String SqsClient builder, but can be converted to any type of
-     * SqsClient by providing your own serializer / deserializer
-     */
-    public static SqsClientBuilder<String> builder() {
-        //default builder has "no-op" serializers
-        return new SqsClientBuilder<>((str) -> str, (str) -> str);
+    public static SqsClientBuilder builder() {
+        return new SqsClientBuilder();
     }
 
     public static String getSqsHostForRegion(Regions region) {
         return MessageFormat.format("https://sqs.{0}.amazonaws.com/", region.getName());
     }
 
-    private SqsQueue<T> getQueueFromUrl(String queueUrl, SqsQueueClientConfig clientConfig) {
-        SqsQueue<String> rawQueue = new BufferedStringSqsQueue(queueUrl, requestSender, clientConfig);
-        return new MappingSqsQueue<>(rawQueue, map, inverseMap);
+    private SqsQueue<String> getQueueFromUrl(String queueUrl, SqsQueueClientConfig clientConfig) {
+        return new BufferedStringSqsQueue(queueUrl, requestSender, clientConfig);
     }
 }

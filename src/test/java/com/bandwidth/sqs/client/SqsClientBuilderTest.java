@@ -18,18 +18,11 @@ public class SqsClientBuilderTest {
 
     @Test
     public void testBuilder() {
-        SqsClientBuilder<String> stringClientBuilder = SqsClient.builder()
+        SqsClientBuilder stringClientBuilder = SqsClient.builder()
                 .credentialsProvider(credentialsProviderMock)
                 .httpClient(asyncHttpClientMock)
                 .retryCount(RETRY_COUNT);
-
-        Function<Integer, String> serialize = (n) -> Integer.toString(n);
-        SqsClientBuilder<Integer> intBuilder = stringClientBuilder.map(Integer::parseInt, serialize);
-
-        SqsClient<String> stringClient = stringClientBuilder.build();
-        SqsClient<Integer> intClient = intBuilder.build();
-
-        assertThat(stringClient).isNotNull();
-        assertThat(intClient).isNotNull();
+        SqsClient client = stringClientBuilder.build();
+        assertThat(client).isNotNull();
     }
 }

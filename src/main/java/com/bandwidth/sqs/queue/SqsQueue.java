@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
+import io.reactivex.functions.Function;
 
 public interface SqsQueue<T> extends MessagePublisher<T> {
 
@@ -25,6 +26,10 @@ public interface SqsQueue<T> extends MessagePublisher<T> {
     Completable changeMessageVisibility(String receiptHandle, Duration newVisibility);
 
     Completable setAttributes(MutableSqsQueueAttributes attributes);
+
+    default <U> SqsQueue<U> map(Function<T, U> map, Function<U, T> inverseMap) {
+        return new MappingSqsQueue<>(this, map, inverseMap);
+    }
 
     default Single<List<SqsMessage<T>>> receiveMessages(int maxMessages, Duration waitTime, Duration
             visibilityTimeout) {
