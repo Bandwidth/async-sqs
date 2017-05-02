@@ -30,7 +30,7 @@ public class SqsQueueAttributeTest {
 
     @Test
     public void testGetStringMap() {
-        SqsQueueMutableAttributes attributes = SqsQueueMutableAttributes.builder()
+        MutableSqsQueueAttributes attributes = MutableSqsQueueAttributes.builder()
                 .messageRetentionPeriod(RETENTION_PERIOD)
                 .maxMessageBytes(MAX_MESSAGE_BYTES)
                 .deliveryDelay(DELIVERY_DELAY)

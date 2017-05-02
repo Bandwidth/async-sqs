@@ -21,7 +21,7 @@ public class MappingSqsQueueTest {
 
     private static final String RECEIPT_HANDLE = "receipt-handle";
     private static final String MESSAGE_ID = "message-id";
-    private static final SqsQueueMutableAttributes ATTRIBUTES = SqsQueueMutableAttributes.builder().build();
+    private static final MutableSqsQueueAttributes ATTRIBUTES = MutableSqsQueueAttributes.builder().build();
     private static final Integer DESERIALIZED_VALUE = 42;
     private static final String SERIALIZED_VALUE = "42";
     private static final RuntimeException SERIALIZATION_ERR = new RuntimeException("serialization error");

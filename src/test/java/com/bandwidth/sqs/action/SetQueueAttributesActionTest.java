@@ -3,13 +3,13 @@ package com.bandwidth.sqs.action;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.sqs.model.SetQueueAttributesRequest;
-import com.bandwidth.sqs.queue.SqsQueueMutableAttributes;
+import com.bandwidth.sqs.queue.MutableSqsQueueAttributes;
 
 import org.junit.Test;
 
 public class SetQueueAttributesActionTest {
     private static final String QUEUE_URL = "https://domain.com/path";
-    private static final SqsQueueMutableAttributes ATTRIBUTES = SqsQueueMutableAttributes.builder().build();
+    private static final MutableSqsQueueAttributes ATTRIBUTES = MutableSqsQueueAttributes.builder().build();
 
 
     @Test
