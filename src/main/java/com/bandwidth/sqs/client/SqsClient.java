@@ -13,7 +13,6 @@ import com.bandwidth.sqs.action.GetQueueUrlAction;
 import com.bandwidth.sqs.action.sender.SqsRequestSender;
 
 import java.text.MessageFormat;
-import java.util.Optional;
 
 import io.reactivex.Single;
 import io.reactivex.functions.Function;
@@ -77,7 +76,7 @@ public class SqsClient<T> {
                     //Have to get queue from name since we don't know the url yet.
                     return getQueueFromName(queueConfig.getName(), queueConfig.getRegion(), clientConfig)
                             .flatMap((queue) -> {
-                                return queue.setAttributes(queueConfig.getAttributes()).toSingleDefault(queue);
+                                return queue.setAttributes(queueConfig.getAttributeChanges()).toSingleDefault(queue);
                             });
                 }
             }

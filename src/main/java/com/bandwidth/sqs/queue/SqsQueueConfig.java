@@ -23,7 +23,7 @@ public abstract class SqsQueueConfig {
      * Any values that are Optional.empty() will be set to the default value
      */
     @Default
-    public SqsQueueAttributeChanges getAttributes() {
+    public SqsQueueAttributeChanges getAttributeChanges() {
         return SqsQueueAttributeChanges.builder().build();
     }
 

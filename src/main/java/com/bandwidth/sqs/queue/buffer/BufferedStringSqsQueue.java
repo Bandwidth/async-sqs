@@ -93,8 +93,8 @@ public class BufferedStringSqsQueue implements SqsQueue<String> {
     }
 
     @Override
-    public Completable setAttributes(SqsQueueAttributeChanges newAttributes) {
-        SetQueueAttributesAction action = new SetQueueAttributesAction(queueUrl, newAttributes);
+    public Completable setAttributes(SqsQueueAttributeChanges attributeChanges) {
+        SetQueueAttributesAction action = new SetQueueAttributesAction(queueUrl, attributeChanges);
         return requestSender.sendRequest(action).toCompletable();
     }
 

@@ -75,7 +75,7 @@ public class SqsClientTest {
         SqsQueue<String> queue = client.upsertQueue(QUEUE_CONFIG).blockingGet();
         assertThat(queue.getQueueUrl()).isEqualTo(QUEUE_URL);
         verify(requestSenderMock).sendRequest(any(CreateQueueAction.class));
-        verifyNoMoreInteractions(requestSenderMock);//make sure getAttributes() was cached
+        verifyNoMoreInteractions(requestSenderMock);//make sure getAttributeChanges() was cached
     }
 
     @Test

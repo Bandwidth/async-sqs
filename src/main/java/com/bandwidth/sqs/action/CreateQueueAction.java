@@ -25,6 +25,6 @@ public class CreateQueueAction extends SqsAwsSdkAction<CreateQueueRequest, Creat
 
         return new CreateQueueRequest()
                 .withQueueName(config.getName())
-                .withAttributes(config.getAttributes().getStringMap());
+                .withAttributes(config.getAttributeChanges().getStringMap());
     }
 }
