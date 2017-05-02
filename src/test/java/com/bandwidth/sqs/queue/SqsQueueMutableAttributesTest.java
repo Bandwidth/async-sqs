@@ -11,7 +11,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.util.Map;
 
-public class SqsQueueAttributeChangesTest {
+public class SqsQueueMutableAttributesTest {
     private static final String REDRIVE_POLICY_STRING =
             "{\"maxReceiveCount\":\"42\",\"deadLetterTargetArn\":\"arn:sqs:123-account-number-456:queue-name\"}";
 

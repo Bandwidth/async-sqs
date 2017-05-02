@@ -62,8 +62,8 @@ public class MappingSqsQueue<T, U> implements SqsQueue<U> {
     }
 
     @Override
-    public Completable setAttributes(SqsQueueAttributeChanges attributeChanges) {
-        return delegate.setAttributes(attributeChanges);
+    public Completable setAttributes(SqsQueueMutableAttributes attributes) {
+        return delegate.setAttributes(attributes);
     }
 
     @Override

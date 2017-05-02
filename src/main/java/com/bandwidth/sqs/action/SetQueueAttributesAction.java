@@ -7,19 +7,19 @@ import com.amazonaws.services.sqs.model.SetQueueAttributesResult;
 import com.amazonaws.services.sqs.model.transform.SetQueueAttributesRequestMarshaller;
 import com.amazonaws.services.sqs.model.transform.SetQueueAttributesResultStaxUnmarshaller;
 import com.bandwidth.sqs.action.adapter.SqsAwsSdkAction;
-import com.bandwidth.sqs.queue.SqsQueueAttributeChanges;
+import com.bandwidth.sqs.queue.SqsQueueMutableAttributes;
 
 public class SetQueueAttributesAction extends SqsAwsSdkAction<SetQueueAttributesRequest, SetQueueAttributesResult> {
-    public SetQueueAttributesAction(String queueUrl, SqsQueueAttributeChanges attributeChanges) {
-        super(createRequest(queueUrl, attributeChanges), queueUrl,
+    public SetQueueAttributesAction(String queueUrl, SqsQueueMutableAttributes attributes) {
+        super(createRequest(queueUrl, attributes), queueUrl,
                 new SetQueueAttributesRequestMarshaller(),
                 new SetQueueAttributesResultStaxUnmarshaller());
     }
 
     @VisibleForTesting
-    static SetQueueAttributesRequest createRequest(String queueUrl, SqsQueueAttributeChanges attributeChanges) {
+    static SetQueueAttributesRequest createRequest(String queueUrl, SqsQueueMutableAttributes attributes) {
         return new SetQueueAttributesRequest()
                 .withQueueUrl(queueUrl)
-                .withAttributes(attributeChanges.getStringMap());
+                .withAttributes(attributes.getStringMap());
     }
 }

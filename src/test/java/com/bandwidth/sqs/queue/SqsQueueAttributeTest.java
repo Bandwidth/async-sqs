@@ -30,13 +30,13 @@ public class SqsQueueAttributeTest {
 
     @Test
     public void testGetStringMap() {
-        SqsQueueAttributeChanges changes = SqsQueueAttributeChanges.builder()
+        SqsQueueMutableAttributes attributes = SqsQueueMutableAttributes.builder()
                 .messageRetentionPeriod(RETENTION_PERIOD)
                 .maxMessageBytes(MAX_MESSAGE_BYTES)
                 .deliveryDelay(DELIVERY_DELAY)
                 .visibilityTimeout(VISIBILITY_TIMEOUT)
                 .redrivePolicy(REDRIVE_POLICY)
                 .build();
-        assertThat(changes.getStringMap()).isEqualTo(ATTRIBUTE_STRING_MAP);
+        assertThat(attributes.getStringMap()).isEqualTo(ATTRIBUTE_STRING_MAP);
     }
 }

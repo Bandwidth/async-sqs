@@ -76,7 +76,7 @@ public class SqsClient<T> {
                     //Have to get queue from name since we don't know the url yet.
                     return getQueueFromName(queueConfig.getName(), queueConfig.getRegion(), clientConfig)
                             .flatMap((queue) -> {
-                                return queue.setAttributes(queueConfig.getAttributeChanges()).toSingleDefault(queue);
+                                return queue.setAttributes(queueConfig.getAttributes()).toSingleDefault(queue);
                             });
                 }
             }

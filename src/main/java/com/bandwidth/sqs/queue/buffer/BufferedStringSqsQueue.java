@@ -8,7 +8,7 @@ import com.bandwidth.sqs.action.SetQueueAttributesAction;
 import com.bandwidth.sqs.queue.ImmutableSqsMessage;
 import com.bandwidth.sqs.queue.SqsMessage;
 import com.bandwidth.sqs.queue.SqsQueue;
-import com.bandwidth.sqs.queue.SqsQueueAttributeChanges;
+import com.bandwidth.sqs.queue.SqsQueueMutableAttributes;
 import com.bandwidth.sqs.queue.SqsQueueAttributes;
 import com.bandwidth.sqs.queue.SqsQueueClientConfig;
 import com.bandwidth.sqs.queue.buffer.task.ChangeMessageVisibilityTask;
@@ -93,8 +93,8 @@ public class BufferedStringSqsQueue implements SqsQueue<String> {
     }
 
     @Override
-    public Completable setAttributes(SqsQueueAttributeChanges attributeChanges) {
-        SetQueueAttributesAction action = new SetQueueAttributesAction(queueUrl, attributeChanges);
+    public Completable setAttributes(SqsQueueMutableAttributes attributes) {
+        SetQueueAttributesAction action = new SetQueueAttributesAction(queueUrl, attributes);
         return requestSender.sendRequest(action).toCompletable();
     }
 
