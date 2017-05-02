@@ -1,6 +1,6 @@
 package com.bandwidth.sqs.consumer;
 
-import static com.bandwidth.sqs.queue.SqsQueueAttributeChangesTest.ATTRIBUTES;
+import static com.bandwidth.sqs.queue.MutableSqsQueueAttributesTest.ATTRIBUTES;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyDouble;
@@ -14,7 +14,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.handlers.AsyncHandler;

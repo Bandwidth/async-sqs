@@ -1,6 +1,6 @@
 package com.bandwidth.sqs.consumer;
 
-import static com.bandwidth.sqs.queue.SqsQueueAttributeChangesTest.ATTRIBUTES;
+import static com.bandwidth.sqs.queue.MutableSqsQueueAttributesTest.ATTRIBUTES;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
