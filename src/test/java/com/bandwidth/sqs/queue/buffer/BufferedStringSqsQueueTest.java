@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
@@ -14,10 +13,9 @@ import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.bandwidth.sqs.action.GetQueueAttributesAction;
 import com.bandwidth.sqs.action.ReceiveMessagesAction;
 import com.bandwidth.sqs.queue.SqsMessage;
-import com.bandwidth.sqs.queue.SqsQueue;
-import com.bandwidth.sqs.queue.SqsQueueAttributeChanges;
-import com.bandwidth.sqs.queue.SqsQueueAttributeChangesTest;
-import com.bandwidth.sqs.queue.SqsQueueAttributes;
+
+import com.bandwidth.sqs.queue.MutableSqsQueueAttributesTest;
+
 import com.bandwidth.sqs.queue.SqsQueueClientConfig;
 import com.bandwidth.sqs.queue.entry.ChangeMessageVisibilityEntry;
 import com.bandwidth.sqs.queue.entry.DeleteMessageEntry;
@@ -28,7 +26,6 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
 
 import io.reactivex.Single;
 
@@ -39,7 +36,6 @@ public class BufferedStringSqsQueueTest {
     private static final String MESSAGE_BODY = "message-body";
     private static final String RECEIPT_HANDLE = "receipt-handle";
     private static final SqsQueueClientConfig CLIENT_CONFIG = SqsQueueClientConfig.builder().build();
-    private static final SqsQueueAttributes ATTRIBUTES = SqsQueueAttributeChangesTest.ATTRIBUTES;
     private static final Message SQS_MESSAGE = new Message()
             .withMessageId(MESSAGE_ID)
             .withBody(MESSAGE_BODY)
@@ -60,7 +56,7 @@ public class BufferedStringSqsQueueTest {
         queue.setChangeMessageVisibilityTaskBuffer(changeMessageVisibilityTaskBufferMock);
 
         when(requestSenderMock.sendRequest(any(GetQueueAttributesAction.class))).thenReturn(Single.just(
-                new GetQueueAttributesResult().withAttributes(SqsQueueAttributeChangesTest.ATTRIBUTE_STRING_MAP)
+                new GetQueueAttributesResult().withAttributes(MutableSqsQueueAttributesTest.ATTRIBUTE_STRING_MAP)
         ));
         when(requestSenderMock.sendRequest(any(ReceiveMessagesAction.class))).thenReturn(Single.just(
                 new ReceiveMessageResult().withMessages(SQS_MESSAGE)

@@ -13,7 +13,6 @@ import com.bandwidth.sqs.action.GetQueueUrlAction;
 import com.bandwidth.sqs.action.sender.SqsRequestSender;
 
 import java.text.MessageFormat;
-import java.util.Optional;
 
 import io.reactivex.Single;
 import io.reactivex.functions.Function;

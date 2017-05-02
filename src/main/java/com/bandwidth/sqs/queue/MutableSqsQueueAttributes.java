@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Immutable
-public abstract class SqsQueueAttributeChanges {
+public abstract class MutableSqsQueueAttributes {
     /**
      * 0 - 12 hours, in 1 second increments
      *
@@ -71,7 +71,7 @@ public abstract class SqsQueueAttributeChanges {
         return builder.build();
     }
 
-    public static ImmutableSqsQueueAttributeChanges.Builder builder() {
-        return ImmutableSqsQueueAttributeChanges.builder();
+    public static ImmutableMutableSqsQueueAttributes.Builder builder() {
+        return ImmutableMutableSqsQueueAttributes.builder();
     }
 }

@@ -4,28 +4,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.model.AmazonSQSException;
 import com.amazonaws.services.sqs.model.CreateQueueResult;
-import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.amazonaws.services.sqs.model.SetQueueAttributesResult;
 import com.bandwidth.sqs.action.CreateQueueAction;
-import com.bandwidth.sqs.action.GetQueueAttributesAction;
 import com.bandwidth.sqs.action.GetQueueUrlAction;
 import com.bandwidth.sqs.action.SetQueueAttributesAction;
 import com.bandwidth.sqs.queue.SqsQueue;
-import com.bandwidth.sqs.queue.SqsQueueAttributeChanges;
-import com.bandwidth.sqs.queue.SqsQueueAttributes;
 import com.bandwidth.sqs.queue.SqsQueueConfig;
 import com.bandwidth.sqs.action.sender.SqsRequestSender;
 
 import org.junit.Test;
-
-import java.time.Duration;
 
 import io.reactivex.Single;
 import io.reactivex.functions.Function;
@@ -35,7 +28,6 @@ public class SqsClientTest {
     private static final String QUEUE_ALREADY_EXISTS = "QueueAlreadyExists";
     private static final String QUEUE_URL = "https://domain.com/12345/queue-name";
     private static final String QUEUE_NAME = "queue-name";
-    private static final SqsQueueAttributeChanges ATTRIBUTE_CHANGES = SqsQueueAttributeChanges.builder().build();
 
     private static final SqsQueueConfig QUEUE_CONFIG = SqsQueueConfig.builder()
             .name(QUEUE_NAME)
@@ -71,11 +63,9 @@ public class SqsClientTest {
         when(requestSenderMock.sendRequest(any(CreateQueueAction.class))).thenReturn(Single.just(
                 new CreateQueueResult().withQueueUrl(QUEUE_URL)
         ));
-
         SqsQueue<String> queue = client.upsertQueue(QUEUE_CONFIG).blockingGet();
         assertThat(queue.getQueueUrl()).isEqualTo(QUEUE_URL);
         verify(requestSenderMock).sendRequest(any(CreateQueueAction.class));
-        verifyNoMoreInteractions(requestSenderMock);//make sure getAttributes() was cached
     }
 
     @Test
