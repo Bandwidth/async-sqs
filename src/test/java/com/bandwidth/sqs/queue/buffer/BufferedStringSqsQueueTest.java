@@ -13,8 +13,9 @@ import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.bandwidth.sqs.action.GetQueueAttributesAction;
 import com.bandwidth.sqs.action.ReceiveMessagesAction;
 import com.bandwidth.sqs.queue.SqsMessage;
+
 import com.bandwidth.sqs.queue.MutableSqsQueueAttributesTest;
-import com.bandwidth.sqs.queue.SqsQueueAttributes;
+
 import com.bandwidth.sqs.queue.SqsQueueClientConfig;
 import com.bandwidth.sqs.queue.entry.ChangeMessageVisibilityEntry;
 import com.bandwidth.sqs.queue.entry.DeleteMessageEntry;
@@ -35,7 +36,6 @@ public class BufferedStringSqsQueueTest {
     private static final String MESSAGE_BODY = "message-body";
     private static final String RECEIPT_HANDLE = "receipt-handle";
     private static final SqsQueueClientConfig CLIENT_CONFIG = SqsQueueClientConfig.builder().build();
-    private static final SqsQueueAttributes ATTRIBUTES = MutableSqsQueueAttributesTest.ATTRIBUTES;
     private static final Message SQS_MESSAGE = new Message()
             .withMessageId(MESSAGE_ID)
             .withBody(MESSAGE_BODY)

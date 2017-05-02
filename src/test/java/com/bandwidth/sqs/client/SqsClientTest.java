@@ -14,7 +14,6 @@ import com.amazonaws.services.sqs.model.SetQueueAttributesResult;
 import com.bandwidth.sqs.action.CreateQueueAction;
 import com.bandwidth.sqs.action.GetQueueUrlAction;
 import com.bandwidth.sqs.action.SetQueueAttributesAction;
-import com.bandwidth.sqs.queue.MutableSqsQueueAttributes;
 import com.bandwidth.sqs.queue.SqsQueue;
 import com.bandwidth.sqs.queue.SqsQueueConfig;
 import com.bandwidth.sqs.action.sender.SqsRequestSender;
@@ -29,7 +28,6 @@ public class SqsClientTest {
     private static final String QUEUE_ALREADY_EXISTS = "QueueAlreadyExists";
     private static final String QUEUE_URL = "https://domain.com/12345/queue-name";
     private static final String QUEUE_NAME = "queue-name";
-    private static final MutableSqsQueueAttributes ATTRIBUTE_CHANGES = MutableSqsQueueAttributes.builder().build();
 
     private static final SqsQueueConfig QUEUE_CONFIG = SqsQueueConfig.builder()
             .name(QUEUE_NAME)

@@ -1,5 +1,7 @@
 package com.bandwidth.sqs.consumer;
 
+import static com.bandwidth.sqs.queue.MutableSqsQueueAttributesTest.ATTRIBUTES;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Matchers.any;
@@ -11,7 +13,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.handlers.AsyncHandler;
@@ -88,6 +90,7 @@ public class SqsConsumerTest {
     public SqsConsumerTest() {
         when(consumerHandlerMock.getPermitChangeRequests()).thenReturn(Observable.never());
         when(backoffStrategyMock.getWindowSize()).thenReturn(WINDOW_SIZE);
+        when(sqsQueueMock.getAttributes()).thenReturn(Single.just(ATTRIBUTES));
 
         consumer = new SqsConsumerBuilder(consumerManagerMock, sqsQueueMock, consumerHandlerMock)
                 .withNumPermits(NUM_PERMITS)
@@ -105,7 +108,6 @@ public class SqsConsumerTest {
         when(backoffStrategyMock.getDelayTime(anyDouble())).thenReturn(Duration.ZERO);
         when(sqsQueueMock.receiveMessages(anyInt(), any(Optional.class))).thenReturn(Single.never());
         when(sqsQueueMock.deleteMessage((String) any())).thenReturn(Completable.never());
-
     }
 
     @Test
@@ -263,7 +265,8 @@ public class SqsConsumerTest {
     public void testDoNotReceiveMessageWhenInShutdown() {
         consumer.shutdown();
         consumer.update();
-        verifyZeroInteractions(sqsQueueMock);
+        verify(sqsQueueMock).getAttributes();
+        verifyNoMoreInteractions(sqsQueueMock);
     }
 
     @Test

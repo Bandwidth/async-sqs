@@ -11,7 +11,6 @@ public class SetQueueAttributesActionTest {
     private static final String QUEUE_URL = "https://domain.com/path";
     private static final MutableSqsQueueAttributes ATTRIBUTES = MutableSqsQueueAttributes.builder().build();
 
-
     @Test
     public void testCreateRequest() {
         SetQueueAttributesRequest request = SetQueueAttributesAction.createRequest(QUEUE_URL, ATTRIBUTES);
