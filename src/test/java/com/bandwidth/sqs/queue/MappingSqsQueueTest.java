@@ -17,7 +17,7 @@ import io.reactivex.Single;
 import io.reactivex.functions.Function;
 
 @SuppressWarnings("unchecked")
-public class SerializingSqsQueueTest {
+public class MappingSqsQueueTest {
 
     private static final String RECEIPT_HANDLE = "receipt-handle";
     private static final String MESSAGE_ID = "message-id";
@@ -36,13 +36,13 @@ public class SerializingSqsQueueTest {
     private final SqsQueue<String> delegateMock = mock(SqsQueue.class);
     private final SqsQueue<Integer> sqsQueue = new MappingSqsQueue<>(delegateMock, deserialize, serialize);
 
-    public SerializingSqsQueueTest() throws Exception {
+    public MappingSqsQueueTest() throws Exception {
         when(deserialize.apply(any())).thenReturn(DESERIALIZED_VALUE);
         when(serialize.apply(anyInt())).thenReturn(SERIALIZED_VALUE);
 
         when(delegateMock.publishMessage(any(), any())).thenReturn(Single.just(MESSAGE_ID));
         when(delegateMock.deleteMessage(any(String.class))).thenReturn(Completable.complete());
-        when(delegateMock.receiveMessages(anyInt(), any(), any()))
+        when(delegateMock.receiveMessages(anyInt(), any(), any(Optional.class)))
                 .thenReturn(Single.just(Collections.singletonList(STRING_MESSAGE)));
     }
 
@@ -91,7 +91,7 @@ public class SerializingSqsQueueTest {
     @Test
     public void testReceiveMessagesSuccess() {
         sqsQueue.receiveMessages().test().assertComplete();
-        verify(delegateMock).receiveMessages(anyInt(), any(), any());
+        verify(delegateMock).receiveMessages(anyInt(), any(), any(Optional.class));
     }
 
     @Test

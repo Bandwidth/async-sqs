@@ -55,8 +55,8 @@ public class SqsClientBuilder<T> {
     /**
      * Converts the builder to a different type by defining mapping functions between the original and new type
      *
-     * @param map Map from the original value, to the new value
-     * @param inverseMap   Map from the new value, back to the original value
+     * @param map        Map from the original value, to the new value
+     * @param inverseMap Map from the new value, back to the original value
      */
     public <U> SqsClientBuilder<U> map(Function<T, U> map, Function<U, T> inverseMap) {
         Function<String, U> stringMap = string -> map.apply(deserialize.apply(string));
