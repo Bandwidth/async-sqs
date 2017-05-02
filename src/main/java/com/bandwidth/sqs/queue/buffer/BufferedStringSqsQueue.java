@@ -9,7 +9,6 @@ import com.bandwidth.sqs.queue.ImmutableSqsMessage;
 import com.bandwidth.sqs.queue.MutableSqsQueueAttributes;
 import com.bandwidth.sqs.queue.SqsMessage;
 import com.bandwidth.sqs.queue.SqsQueue;
-import com.bandwidth.sqs.queue.SqsQueueAttributeChanges;
 import com.bandwidth.sqs.queue.SqsQueueAttributes;
 import com.bandwidth.sqs.queue.SqsQueueClientConfig;
 import com.bandwidth.sqs.queue.buffer.task.ChangeMessageVisibilityTask;
