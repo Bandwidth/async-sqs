@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import io.reactivex.Single;
 import io.reactivex.functions.Function;
+import io.reactivex.subjects.SingleSubject;
 
 public class MappingSqsMessagePublisher<T, U> implements SqsMessagePublisher<T> {
 
@@ -18,6 +19,7 @@ public class MappingSqsMessagePublisher<T, U> implements SqsMessagePublisher<T> 
 
     @Override
     public Single<String> publishMessage(T body, Optional<Duration> maybeDelay) {
-        return Single.defer(() -> delegate.publishMessage(map.apply(body), maybeDelay));
+        return Single.defer(() -> delegate.publishMessage(map.apply(body), maybeDelay))
+                .subscribeWith(SingleSubject.create());//makes it hot
     }
 }

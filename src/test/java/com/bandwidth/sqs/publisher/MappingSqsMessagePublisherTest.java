@@ -30,7 +30,8 @@ public class MappingSqsMessagePublisherTest {
 
     @Test
     public void testPublishMessage() {
-        publisher.publishMessage(ORIGINAL_VALUE).test().assertValue(MESSAGE_ID);
+        Single<String> single = publisher.publishMessage(ORIGINAL_VALUE);
         verify(delegateMock).publishMessage(MAPPED_VALUE, Optional.empty());
+        single.test().assertValue(MESSAGE_ID);
     }
 }
