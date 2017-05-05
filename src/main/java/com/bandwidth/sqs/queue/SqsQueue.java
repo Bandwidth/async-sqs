@@ -1,6 +1,6 @@
 package com.bandwidth.sqs.queue;
 
-import com.bandwidth.sqs.publisher.MessagePublisher;
+import com.bandwidth.sqs.publisher.SqsMessagePublisher;
 
 import java.time.Duration;
 import java.util.List;
@@ -10,7 +10,7 @@ import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.functions.Function;
 
-public interface SqsQueue<T> extends MessagePublisher<T> {
+public interface SqsQueue<T> extends SqsMessagePublisher<T> {
 
     int DEFAULT_MAX_RECEIVE_MESSAGES = 10;
 
