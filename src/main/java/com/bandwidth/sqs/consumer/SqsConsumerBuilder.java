@@ -41,7 +41,7 @@ public class SqsConsumerBuilder<T> {
      * @param numPermits Max number of concurrent requests this consumer can process. A permit is consumed when the
      *                   handler is called, and released when the message is acked or nacked.
      */
-    public SqsConsumerBuilder withNumPermits(int numPermits) {
+    public SqsConsumerBuilder<T> withNumPermits(int numPermits) {
         this.numPermits = numPermits;
         return this;
     }
@@ -55,7 +55,7 @@ public class SqsConsumerBuilder<T> {
      *                   processing finishes causing duplicate messages. The maximum number of in-flight HTTP requests
      *                   is limited to max(1, floor(maxQueueSize/10))
      */
-    public SqsConsumerBuilder withBufferSize(int bufferSize) {
+    public SqsConsumerBuilder<T> withBufferSize(int bufferSize) {
         this.bufferSize = bufferSize;
         return this;
     }
@@ -63,7 +63,7 @@ public class SqsConsumerBuilder<T> {
     /**
      * @param backoffStrategy backoff strategy to use for this consumer
      */
-    public SqsConsumerBuilder withBackoffStrategy(BackoffStrategy backoffStrategy) {
+    public SqsConsumerBuilder<T> withBackoffStrategy(BackoffStrategy backoffStrategy) {
         this.backoffStrategy = backoffStrategy;
         return this;
     }
@@ -71,7 +71,7 @@ public class SqsConsumerBuilder<T> {
     /**
      * @param expirationStrategy Strategy to determine if a message has expired before it is processed
      */
-    public SqsConsumerBuilder withExpirationStrategy(ExpirationStrategy expirationStrategy) {
+    public SqsConsumerBuilder<T> withExpirationStrategy(ExpirationStrategy expirationStrategy) {
         this.expirationStrategy = expirationStrategy;
         return this;
     }
