@@ -163,7 +163,7 @@ public class SqsConsumerTest {
         consumer.setMessageBuffer(messageBufferSmall);
         consumer.start();//will be queued for processing
         consumer.update();//already queued, won't queue again
-        verify(consumerManagerMock).queueTask(any());
+        verify(consumerManagerMock).queueTask(any(), anyInt(), any());
     }
 
     @Test
@@ -179,14 +179,14 @@ public class SqsConsumerTest {
         when(backoffStrategyMock.getDelayTime(anyDouble())).thenReturn(Duration.ofDays(999999));
         consumer.checkIfBackoffDelayNeeded();
         consumer.start();//backoffDelay prevents consumer from being queued
-        verify(consumerManagerMock, never()).queueTask(any());
+        verify(consumerManagerMock, never()).queueTask(any(), anyInt(), any());
     }
 
     @Test
     public void testNegativeBackoffDelay() {
         when(backoffStrategyMock.getDelayTime(anyDouble())).thenReturn(Duration.ofDays(-1));
         consumer.checkIfBackoffDelayNeeded();
-        verify(consumerManagerMock, never()).queueTask(any());
+        verify(consumerManagerMock, never()).queueTask(any(), anyInt(), any());
     }
 
     @Test
@@ -200,7 +200,7 @@ public class SqsConsumerTest {
     @Test
     public void testProcessNextMessage() {
         consumer.setMessageBuffer(messageBufferSmall);
-        consumer.processNextMessage();
+        consumer.processNextMessage(consumer.getNextMessage());
         verify(consumerHandlerMock).handleMessage(eq(SQS_MESSAGE), any());
     }
 
@@ -208,7 +208,7 @@ public class SqsConsumerTest {
     public void testProcessNextMessageExpired() {
         when(expirationStrategyMock.isExpired(any())).thenReturn(true);
         consumer.setMessageBuffer(messageBufferSmall);
-        consumer.processNextMessage();
+        consumer.processNextMessage(consumer.getNextMessage());
         verify(consumerHandlerMock, never()).handleMessage(eq(SQS_MESSAGE), any());
     }
 
@@ -291,7 +291,7 @@ public class SqsConsumerTest {
     @Test
     public void testIsNotTerminatedWhenProcessingMessage() {
         consumer.setMessageBuffer(messageBufferSmall);
-        consumer.processNextMessage();
+        consumer.processNextMessage(consumer.getNextMessage());
         consumer.shutdownAsync().test().assertNotComplete();
     }
 
@@ -319,7 +319,7 @@ public class SqsConsumerTest {
         when(sqsQueueMock.receiveMessages(anyInt(), any(Optional.class))).thenReturn(singleSubject);
 
         consumer.setMessageBuffer(messageBufferSmall);
-        consumer.processNextMessage();
+        consumer.processNextMessage(consumer.getNextMessage());
 
         //handler does not ack here, so permits will be pending forever
 
@@ -342,7 +342,7 @@ public class SqsConsumerTest {
         })).when(consumerHandlerMock).handleMessage(any(), any());
 
         consumer.setMessageBuffer(messageBufferSmall);
-        consumer.processNextMessage();
+        consumer.processNextMessage(consumer.getNextMessage());
         Completable shutdownCompletable = consumer.shutdownAsync();
         singleSubject.onSuccess(Collections.emptyList());
 
@@ -363,7 +363,7 @@ public class SqsConsumerTest {
         })).when(consumerHandlerMock).handleMessage(any(), any());
 
         consumer.setMessageBuffer(messageBufferSmall);
-        consumer.processNextMessage();
+        consumer.processNextMessage(consumer.getNextMessage());
         Completable shutdownCompletable = consumer.shutdownAsync();
         singleSubject.onSuccess(Collections.emptyList());
 
@@ -381,8 +381,8 @@ public class SqsConsumerTest {
                 .withExpirationStrategy(expirationStrategyMock)
                 .build();
         consumer.setMessageBuffer(messageBufferSmall);
-        consumer.processNextMessage();
-        consumer.processNextMessage();
+        consumer.processNextMessage(consumer.getNextMessage());
+        consumer.processNextMessage(consumer.getNextMessage());
         verify(handlerSpy, times(2)).handleMessage(eq(SQS_MESSAGE), any());
     }
 

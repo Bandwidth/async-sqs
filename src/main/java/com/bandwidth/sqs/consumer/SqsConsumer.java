@@ -55,13 +55,14 @@ public class SqsConsumer<T> {
 
     private final int maxQueueSize;
     private final BackoffStrategy backoffStrategy;
-    private final SqsConsumerManager manager;
+    private final SqsConsumerManager<T> manager;
     private final ExpirationStrategy expirationStrategy;
     private final AtomicInteger inFlightLoadBalancedRequests = new AtomicInteger(0);
     private final AtomicBoolean longPollRequestInFlight = new AtomicBoolean(false);
     private final CompletableSubject shutdownCompletable = CompletableSubject.create();
     private final Disposable permitChangeDisposable;
     private final SqsQueueAttributes queueAttributes;
+    private final int priority;
 
     private ArrayDeque<SqsMessage<T>> messageBuffer = new ArrayDeque<>();
     private boolean waitingInQueue = false;
@@ -84,6 +85,7 @@ public class SqsConsumer<T> {
         this.expirationStrategy = requireNonNull(builder.expirationStrategy);
 
         this.sqsQueue = builder.sqsQueue;
+        this.priority = builder.priority;
         this.queueAttributes = sqsQueue.getAttributes().blockingGet();
         this.maxPermits = new AtomicInteger(builder.numPermits);
         this.remainingPermits = new AtomicInteger(builder.numPermits);
@@ -116,6 +118,10 @@ public class SqsConsumer<T> {
         return expirationStrategy;
     }
 
+    public int getPriority() {
+        return priority;
+    }
+
     /**
      * Consumer cannot be started after it has been shutdown
      */
@@ -123,7 +129,8 @@ public class SqsConsumer<T> {
         update();
     }
 
-    public void update() {
+    public synchronized void update() {
+//        System.out.println("update start: " + priority);
         queueForProcessingIfNeeded();
         if (shuttingDown) {
             if (isShutdown()) {
@@ -132,6 +139,7 @@ public class SqsConsumer<T> {
         } else {
             startNewRequestsIfNeeded();
         }
+//        System.out.println("update stop: " + priority);
     }
 
     public void setNumPermits(int newValue) {
@@ -210,9 +218,7 @@ public class SqsConsumer<T> {
                 startNewRequest(RequestType.LONG_POLLING);
             }
         }
-
         int allocatedRequests = manager.getAllocatedInFlightRequestsCount(this);
-
         while (inFlightLoadBalancedRequests.get() < allocatedRequests) {
             inFlightLoadBalancedRequests.getAndIncrement();
             startNewRequest(RequestType.LOAD_BALANCED);
@@ -234,7 +240,7 @@ public class SqsConsumer<T> {
             //This helps guarantee fairness so a single consumer doesn't consume all resources
             waitingInQueue = true;
 
-            manager.queueTask(this::processNextMessage);
+            manager.queueTask(this::processNextMessage, priority, this);
             checkIfBackoffDelayNeeded();
         }
     }
@@ -247,12 +253,11 @@ public class SqsConsumer<T> {
         }
     }
 
-    private synchronized SqsMessage<T> getNextMessage() {
+    synchronized SqsMessage<T> getNextMessage() {
         SqsMessage<T> message = messageBuffer.pop();
         waitingInQueue = false;
 
         boolean expired = expirationStrategy.isExpired(message);
-
         if (expired) {
             update();
             return null;
@@ -263,11 +268,9 @@ public class SqsConsumer<T> {
         }
     }
 
-    void processNextMessage() {
-
-        SqsMessage<T> message = getNextMessage();
+    Completable processNextMessage(SqsMessage<T> message) {
         if (message == null) {
-            return;
+            return Completable.complete();
         }
         MessageAcknowledger<T> acknowledger = new MessageAcknowledger<>(sqsQueue, message.getReceiptHandle());
 
@@ -291,6 +294,7 @@ public class SqsConsumer<T> {
                     remainingPermits.incrementAndGet();
                     update();
                 }).subscribe();
+        return acknowledger.getCompletable();
     }
 
     public enum RequestType {
