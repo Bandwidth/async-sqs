@@ -130,7 +130,6 @@ public class SqsConsumer<T> {
     }
 
     public synchronized void update() {
-//        System.out.println("update start: " + priority);
         queueForProcessingIfNeeded();
         if (shuttingDown) {
             if (isShutdown()) {
@@ -139,7 +138,6 @@ public class SqsConsumer<T> {
         } else {
             startNewRequestsIfNeeded();
         }
-//        System.out.println("update stop: " + priority);
     }
 
     public void setNumPermits(int newValue) {
