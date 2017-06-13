@@ -104,6 +104,13 @@ public class SqsConsumerManager<T> {
         }
     }
 
+    /**
+     *
+     * @param task A function that takes an sqs message to process, that returns a Completable when the task is
+     *             considered to be completed
+     * @param priority The priority of the task. Higher priority (lower value) is run first.
+     * @param consumer The consumer that owns this task.
+     */
     public void queueTask(Function<SqsMessage<T>, Completable> task, int priority, SqsConsumer<T> consumer) {
 
         //queue a task that we want to run on the thread pool. If there are more tasks than threads
