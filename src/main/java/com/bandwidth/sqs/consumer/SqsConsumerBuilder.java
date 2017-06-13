@@ -10,6 +10,7 @@ import com.bandwidth.sqs.queue.SqsQueue;
 public class SqsConsumerBuilder<T> {
     public static final int DEFAULT_NUM_PERMITS = 500;
     public static final int DEFAULT_BUFFER_SIZE = 640;
+    public static final int DEFAULT_PRIORITY = 0;
 
     final SqsConsumerManager consumerManager;
     final SqsQueue<T> sqsQueue;
@@ -17,6 +18,7 @@ public class SqsConsumerBuilder<T> {
 
     int numPermits = DEFAULT_NUM_PERMITS;
     int bufferSize = DEFAULT_BUFFER_SIZE;
+    int priority = DEFAULT_PRIORITY;
     BackoffStrategy backoffStrategy = new NullBackoffStrategy();
     ExpirationStrategy expirationStrategy = new NeverExpiresStrategy();
 
@@ -73,6 +75,15 @@ public class SqsConsumerBuilder<T> {
      */
     public SqsConsumerBuilder<T> withExpirationStrategy(ExpirationStrategy expirationStrategy) {
         this.expirationStrategy = expirationStrategy;
+        return this;
+    }
+
+    /**
+     * @param priority A consumer with a higher priority (lower value) will have messages processed first
+     *                 (0 is the highest priority)
+     */
+    public SqsConsumerBuilder<T> withPriority(int priority){
+        this.priority = priority;
         return this;
     }
 }

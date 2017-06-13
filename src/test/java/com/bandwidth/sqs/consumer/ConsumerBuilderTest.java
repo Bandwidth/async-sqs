@@ -24,6 +24,7 @@ public class ConsumerBuilderTest {
 
     private static final int BUFFER_SIZE = SqsConsumerBuilder.DEFAULT_BUFFER_SIZE + 1;
     private static final int NUM_PERMITS = SqsConsumerBuilder.DEFAULT_NUM_PERMITS + 1;
+    private static final int PRIORITY = 42;
 
     private final SqsQueue<String> sqsQueueMock = mock(SqsQueue.class);
     private final SqsConsumerManager consumerManagerMock = mock(SqsConsumerManager.class);
@@ -47,11 +48,13 @@ public class ConsumerBuilderTest {
                 .withBufferSize(BUFFER_SIZE)
                 .withNumPermits(NUM_PERMITS)
                 .withExpirationStrategy(expirationStrategy)
+                .withPriority(PRIORITY)
                 .build();
 
         assertThat(consumer.getBackoffStrategy()).isEqualTo(backoffStrategy);
         assertThat(consumer.getBufferSize()).isEqualTo(BUFFER_SIZE);
         assertThat(consumer.getNumPermits()).isEqualTo(NUM_PERMITS);
         assertThat(consumer.getExpirationStrategy()).isEqualTo(expirationStrategy);
+        assertThat(consumer.getPriority()).isEqualTo(PRIORITY);
     }
 }

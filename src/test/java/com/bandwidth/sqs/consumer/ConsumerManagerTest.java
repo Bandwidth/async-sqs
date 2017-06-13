@@ -1,10 +1,12 @@
 package com.bandwidth.sqs.consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import com.bandwidth.sqs.consumer.strategy.loadbalance.LoadBalanceStrategy.Action;
+import com.bandwidth.sqs.queue.SqsMessage;
 
 import org.junit.Test;
 
@@ -13,9 +15,15 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 
+import io.reactivex.Completable;
+import io.reactivex.functions.Function;
+
+@SuppressWarnings("unchecked")
 public class ConsumerManagerTest {
 
+    private static final int PRIORITY = 0;
     private static final int MAX_LOAD_BALANCED_REQUESTS = 2;
+    private static final int NUM_PERMITS = 1;
 
     private final ExecutorService threadPoolMock = mock(ExecutorService.class);
     private final SqsConsumer consumerMock = mock(SqsConsumer.class);
@@ -24,16 +32,16 @@ public class ConsumerManagerTest {
     private SqsConsumerManager consumerManager;
 
     public ConsumerManagerTest() {
-        consumerManager = new SqsConsumerManager(MAX_LOAD_BALANCED_REQUESTS, threadPoolMock);
+        consumerManager = new SqsConsumerManager(MAX_LOAD_BALANCED_REQUESTS, threadPoolMock, NUM_PERMITS);
         consumerManager.addConsumer(consumerMock);
         consumerManager.addConsumer(consumerMock2);
     }
 
     @Test
     public void queueReadyConsumerTest() {
-        Runnable task = mock(Runnable.class);
-        consumerManager.queueTask(task);
-        verify(threadPoolMock).execute(task);
+        Function<SqsMessage, Completable> task = mock(Function.class);
+        consumerManager.queueTask(task, PRIORITY, mock(SqsConsumer.class));
+        verify(threadPoolMock).execute(any());
     }
 
     @Test
