@@ -4,6 +4,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.model.AmazonSQSException;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.bandwidth.sqs.queue.MappingSqsQueue;
+import com.bandwidth.sqs.queue.RetryingSqsQueue;
 import com.bandwidth.sqs.queue.SqsQueue;
 import com.bandwidth.sqs.queue.SqsQueueClientConfig;
 import com.bandwidth.sqs.queue.SqsQueueConfig;
@@ -101,6 +102,7 @@ public class SqsClient {
     }
 
     private SqsQueue<String> getQueueFromUrl(String queueUrl, SqsQueueClientConfig clientConfig) {
-        return new BufferedStringSqsQueue(queueUrl, requestSender, clientConfig);
+        BufferedStringSqsQueue bufferedQueue = new BufferedStringSqsQueue(queueUrl, requestSender, clientConfig);
+        return new RetryingSqsQueue<>(bufferedQueue, retryCount);
     }
 }
