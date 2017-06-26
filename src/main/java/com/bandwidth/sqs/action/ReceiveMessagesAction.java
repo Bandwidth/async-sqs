@@ -12,7 +12,6 @@ import java.time.Duration;
 import java.util.Optional;
 
 public class ReceiveMessagesAction extends SqsAwsSdkAction<ReceiveMessageRequest, ReceiveMessageResult> {
-    public static final boolean IS_BATCH_ACTION = false;
 
     public ReceiveMessagesAction(String queueUrl, int maxMessages, Optional<Duration> waitTime,
             Optional<Duration> visibilityTimeout) {
@@ -20,8 +19,7 @@ public class ReceiveMessagesAction extends SqsAwsSdkAction<ReceiveMessageRequest
         super(createRequest(queueUrl, maxMessages, waitTime, visibilityTimeout),
                 queueUrl,
                 new ReceiveMessageRequestMarshaller(),
-                new ReceiveMessageResultStaxUnmarshaller(),
-                IS_BATCH_ACTION
+                new ReceiveMessageResultStaxUnmarshaller()
         );
     }
 

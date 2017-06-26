@@ -7,17 +7,17 @@ import com.amazonaws.services.sqs.model.SetQueueAttributesResult;
 import com.amazonaws.services.sqs.model.transform.SetQueueAttributesRequestMarshaller;
 import com.amazonaws.services.sqs.model.transform.SetQueueAttributesResultStaxUnmarshaller;
 import com.bandwidth.sqs.action.adapter.SqsAwsSdkAction;
+import com.bandwidth.sqs.action.adapter.SqsAwsSdkBatchAction;
 import com.bandwidth.sqs.queue.MutableSqsQueueAttributes;
 
 
-public class SetQueueAttributesAction extends SqsAwsSdkAction<SetQueueAttributesRequest, SetQueueAttributesResult> {
-    public static final boolean IS_BATCH_ACTION = false;
+public class SetQueueAttributesAction
+        extends SqsAwsSdkBatchAction<SetQueueAttributesRequest, SetQueueAttributesResult> {
 
     public SetQueueAttributesAction(String queueUrl, MutableSqsQueueAttributes attributes) {
         super(createRequest(queueUrl, attributes), queueUrl,
                 new SetQueueAttributesRequestMarshaller(),
-                new SetQueueAttributesResultStaxUnmarshaller(),
-                IS_BATCH_ACTION);
+                new SetQueueAttributesResultStaxUnmarshaller());
     }
 
     @VisibleForTesting

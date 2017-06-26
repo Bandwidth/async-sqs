@@ -15,7 +15,11 @@ import io.reactivex.subjects.SingleSubject;
 
 /**
  * The SqsRequestSender is only able to retry non-batched actions, since it doesn't have access to the individual
- * actions inside of a batch. This class retries each individual action
+ * actions inside of a batch. This class retries each individual action.
+ * The following actions are batched/retried here, the rest are not
+ *  - SendMessage
+ *  - ChangeMessageVisibility
+ *  - DeleteMessage
  */
 public class RetryingSqsQueue<T> implements SqsQueue<T> {
 

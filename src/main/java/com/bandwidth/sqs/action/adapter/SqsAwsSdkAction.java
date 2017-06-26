@@ -39,7 +39,6 @@ public class SqsAwsSdkAction<RequestT extends AmazonWebServiceRequest, ResponseT
     private final String requestUrl;
     private final RequestT request;
     private final Marshaller<com.amazonaws.Request<RequestT>, RequestT> marshaller;
-    private final boolean isBatchAction;
 
     private StaxResponseHandler<ResponseT> staxResponseHandler;
     private com.amazonaws.Request<RequestT> awsHttpRequest;
@@ -51,14 +50,12 @@ public class SqsAwsSdkAction<RequestT extends AmazonWebServiceRequest, ResponseT
 
     public SqsAwsSdkAction(RequestT request, String requestUrl,
             Marshaller<com.amazonaws.Request<RequestT>, RequestT> marshaller,
-            Unmarshaller<ResponseT, StaxUnmarshallerContext> unmarshaller,
-            boolean isBatchAction) {
+            Unmarshaller<ResponseT, StaxUnmarshallerContext> unmarshaller) {
 
         this.requestUrl = requestUrl;
         this.request = request;
         this.marshaller = marshaller;
         this.staxResponseHandler = new StaxResponseHandler<>(unmarshaller);
-        this.isBatchAction = isBatchAction;
     }
 
     @Override
@@ -75,7 +72,7 @@ public class SqsAwsSdkAction<RequestT extends AmazonWebServiceRequest, ResponseT
 
     @Override
     public boolean isBatchAction() {
-        return isBatchAction;
+        return false;
     }
 
     @Override

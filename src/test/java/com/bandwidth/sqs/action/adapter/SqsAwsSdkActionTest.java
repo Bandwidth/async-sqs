@@ -34,7 +34,6 @@ public class SqsAwsSdkActionTest {
     private static final String SECRET_KEY = "secret-key";
     private static final int STATUS_SUCCESS = 200;
     private static final int STATUS_FAILED = 500;
-    private static final boolean IS_BATCH_ACTION = false;
 
 
     private final SendMessageRequest sendMessageRequestMock = mock(SendMessageRequest.class);
@@ -56,8 +55,7 @@ public class SqsAwsSdkActionTest {
 
 
     private final SqsAwsSdkAction<SendMessageRequest, SendMessageResult> action =
-            new SqsAwsSdkAction<>(sendMessageRequestMock, REQUEST_URL, marshallerMock, unmarshallerMock,
-                    IS_BATCH_ACTION);
+            new SqsAwsSdkAction<>(sendMessageRequestMock, REQUEST_URL, marshallerMock, unmarshallerMock);
 
     public SqsAwsSdkActionTest() throws Exception {
         action.setRequestConverter(requestConverterMock);
