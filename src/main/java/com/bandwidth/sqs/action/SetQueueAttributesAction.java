@@ -9,11 +9,15 @@ import com.amazonaws.services.sqs.model.transform.SetQueueAttributesResultStaxUn
 import com.bandwidth.sqs.action.adapter.SqsAwsSdkAction;
 import com.bandwidth.sqs.queue.MutableSqsQueueAttributes;
 
+
 public class SetQueueAttributesAction extends SqsAwsSdkAction<SetQueueAttributesRequest, SetQueueAttributesResult> {
+    public static final boolean IS_BATCH_ACTION = false;
+
     public SetQueueAttributesAction(String queueUrl, MutableSqsQueueAttributes attributes) {
         super(createRequest(queueUrl, attributes), queueUrl,
                 new SetQueueAttributesRequestMarshaller(),
-                new SetQueueAttributesResultStaxUnmarshaller());
+                new SetQueueAttributesResultStaxUnmarshaller(),
+                IS_BATCH_ACTION);
     }
 
     @VisibleForTesting

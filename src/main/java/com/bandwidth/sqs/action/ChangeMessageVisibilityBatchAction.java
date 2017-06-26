@@ -14,12 +14,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ChangeMessageVisibilityBatchAction
-        extends SqsAwsSdkAction<ChangeMessageVisibilityBatchRequest, ChangeMessageVisibilityBatchResult>{
+        extends SqsAwsSdkAction<ChangeMessageVisibilityBatchRequest, ChangeMessageVisibilityBatchResult> {
+    public static final boolean IS_BATCH_ACTION = true;
 
     public ChangeMessageVisibilityBatchAction(String queueUrl, Map<String, ChangeMessageVisibilityEntry> entries) {
         super(createRequest(queueUrl, entries), queueUrl,
                 new ChangeMessageVisibilityBatchRequestMarshaller(),
-                new ChangeMessageVisibilityBatchResultStaxUnmarshaller());
+                new ChangeMessageVisibilityBatchResultStaxUnmarshaller(),
+                IS_BATCH_ACTION);
     }
 
     @VisibleForTesting

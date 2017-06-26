@@ -14,10 +14,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class SendMessageBatchAction extends SqsAwsSdkAction<SendMessageBatchRequest, SendMessageBatchResult> {
+    public static final boolean IS_BATCH_ACTION = true;
 
     public SendMessageBatchAction(String queueUrl, Map<String, SendMessageEntry> entries) {
         super(createRequest(queueUrl, entries), queueUrl, new SendMessageBatchRequestMarshaller(),
-                new SendMessageBatchResultStaxUnmarshaller()
+                new SendMessageBatchResultStaxUnmarshaller(),
+                IS_BATCH_ACTION
         );
     }
 

@@ -11,11 +11,13 @@ import com.bandwidth.sqs.action.adapter.SqsAwsSdkAction;
 import com.bandwidth.sqs.client.SqsClient;
 
 public class GetQueueUrlAction extends SqsAwsSdkAction<GetQueueUrlRequest, GetQueueUrlResult> {
+    public static final boolean IS_BATCH_ACTION = false;
 
     public GetQueueUrlAction(String queueName, Regions region) {
         super(createRequest(queueName), SqsClient.getSqsHostForRegion(region),
                 new GetQueueUrlRequestMarshaller(),
-                new GetQueueUrlResultStaxUnmarshaller());
+                new GetQueueUrlResultStaxUnmarshaller(),
+                IS_BATCH_ACTION);
     }
 
     @VisibleForTesting

@@ -12,11 +12,13 @@ import com.bandwidth.sqs.queue.SqsQueueConfig;
 
 
 public class CreateQueueAction extends SqsAwsSdkAction<CreateQueueRequest, CreateQueueResult> {
+    public static final boolean IS_BATCH_ACTION = false;
 
     public CreateQueueAction(SqsQueueConfig config) {
         super(createRequest(config), SqsClient.getSqsHostForRegion(config.getRegion()),
                 new CreateQueueRequestMarshaller(),
-                new CreateQueueResultStaxUnmarshaller());
+                new CreateQueueResultStaxUnmarshaller(),
+                IS_BATCH_ACTION);
     }
 
     @VisibleForTesting

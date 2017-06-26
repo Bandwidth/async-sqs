@@ -46,6 +46,6 @@ public class SqsClientBuilder {
     public SqsClient build() {
         SqsRequestSender requestSender = new RetryingSqsRequestSender(retryCount,
                 new BaseSqsRequestSender(httpClient, credentialsProvider));
-        return new SqsClient(requestSender);
+        return new SqsClient(requestSender, retryCount);
     }
 }

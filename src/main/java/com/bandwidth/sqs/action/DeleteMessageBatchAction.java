@@ -14,9 +14,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DeleteMessageBatchAction extends SqsAwsSdkAction<DeleteMessageBatchRequest, DeleteMessageBatchResult> {
+    public static final boolean IS_BATCH_ACTION = true;
+
     public DeleteMessageBatchAction(String queueUrl, Map<String, DeleteMessageEntry> entries) {
         super(createRequest(queueUrl, entries), queueUrl, new DeleteMessageBatchRequestMarshaller(),
-                new DeleteMessageBatchResultStaxUnmarshaller());
+                new DeleteMessageBatchResultStaxUnmarshaller(), IS_BATCH_ACTION);
     }
 
     @VisibleForTesting

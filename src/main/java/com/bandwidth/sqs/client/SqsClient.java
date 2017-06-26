@@ -22,9 +22,11 @@ public class SqsClient {
     private static final String QUEUE_ALREADY_EXISTS = "QueueAlreadyExists";
 
     private final SqsRequestSender requestSender;
+    private final int retryCount;
 
-    public SqsClient(SqsRequestSender requestSender) {
+    public SqsClient(SqsRequestSender requestSender, int retryCount) {
         this.requestSender = requestSender;
+        this.retryCount = retryCount;
     }
 
     /**
