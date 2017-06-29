@@ -8,6 +8,7 @@ import java.util.Optional;
 import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.functions.Function;
+import io.reactivex.subjects.SingleSubject;
 
 public class MappingSqsQueue<T, U> implements SqsQueue<U> {
 
@@ -71,6 +72,6 @@ public class MappingSqsQueue<T, U> implements SqsQueue<U> {
         return Single.defer(() -> {
             T serializedBody = inverseMap.apply(body);
             return delegate.publishMessage(serializedBody, maybeDelay);
-        });
+        }).subscribeWith(SingleSubject.create());
     }
 }
