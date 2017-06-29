@@ -27,6 +27,7 @@ public class SqsClientTest {
     private static final String QUEUE_ALREADY_EXISTS = "QueueAlreadyExists";
     private static final String QUEUE_URL = "https://domain.com/12345/queue-name";
     private static final String QUEUE_NAME = "queue-name";
+    private static final int RETRY_COUNT = 1;
 
     private static final SqsQueueConfig QUEUE_CONFIG = SqsQueueConfig.builder()
             .name(QUEUE_NAME)
@@ -35,7 +36,7 @@ public class SqsClientTest {
 
     private final SqsRequestSender requestSenderMock = mock(SqsRequestSender.class);
 
-    private final SqsClient client = new SqsClient(requestSenderMock);
+    private final SqsClient client = new SqsClient(requestSenderMock, RETRY_COUNT);
 
     public SqsClientTest() {
         QUEUE_ALREADY_EXISTS_EXCEPTION.setErrorCode(QUEUE_ALREADY_EXISTS);

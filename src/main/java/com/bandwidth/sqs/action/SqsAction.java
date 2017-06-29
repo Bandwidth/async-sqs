@@ -10,5 +10,12 @@ public interface SqsAction<T> {
 
     T parseHttpResponse(Response httpResponse) throws Exception;
 
-
+    /**
+     * Indicates if this action is a batch action. It is possible for the entire "batch action" to succeed,
+     * but have failures of the individual actions in the batch, so retry logic must be processed differently
+     * for batch actions
+     *
+     * @return True if this is a batch action, false otherwise
+     */
+    boolean isBatchAction();
 }

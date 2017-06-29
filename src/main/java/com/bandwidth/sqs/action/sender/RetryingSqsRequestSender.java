@@ -21,7 +21,7 @@ public class RetryingSqsRequestSender implements SqsRequestSender {
     public <T> Single<T> sendRequest(SqsAction<T> request) {
         return Single.defer(() -> delegate.sendRequest(request))
                 .retry((errCount, error) -> {
-                    if (errCount > retryCount) {
+                    if (errCount > retryCount || request.isBatchAction()) {
                         return false;
                     }
                     if (error instanceof AmazonSQSException) {

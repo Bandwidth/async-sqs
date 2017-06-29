@@ -4,6 +4,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.model.AmazonSQSException;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.bandwidth.sqs.queue.MappingSqsQueue;
+import com.bandwidth.sqs.queue.RetryingSqsQueue;
 import com.bandwidth.sqs.queue.SqsQueue;
 import com.bandwidth.sqs.queue.SqsQueueClientConfig;
 import com.bandwidth.sqs.queue.SqsQueueConfig;
@@ -22,9 +23,11 @@ public class SqsClient {
     private static final String QUEUE_ALREADY_EXISTS = "QueueAlreadyExists";
 
     private final SqsRequestSender requestSender;
+    private final int retryCount;
 
-    public SqsClient(SqsRequestSender requestSender) {
+    public SqsClient(SqsRequestSender requestSender, int retryCount) {
         this.requestSender = requestSender;
+        this.retryCount = retryCount;
     }
 
     /**
@@ -99,6 +102,7 @@ public class SqsClient {
     }
 
     private SqsQueue<String> getQueueFromUrl(String queueUrl, SqsQueueClientConfig clientConfig) {
-        return new BufferedStringSqsQueue(queueUrl, requestSender, clientConfig);
+        BufferedStringSqsQueue bufferedQueue = new BufferedStringSqsQueue(queueUrl, requestSender, clientConfig);
+        return new RetryingSqsQueue<>(bufferedQueue, retryCount);
     }
 }

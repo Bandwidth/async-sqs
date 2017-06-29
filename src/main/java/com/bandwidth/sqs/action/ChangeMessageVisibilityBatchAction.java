@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ChangeMessageVisibilityBatchAction
-        extends SqsAwsSdkAction<ChangeMessageVisibilityBatchRequest, ChangeMessageVisibilityBatchResult>{
+        extends SqsAwsSdkAction<ChangeMessageVisibilityBatchRequest, ChangeMessageVisibilityBatchResult> {
 
     public ChangeMessageVisibilityBatchAction(String queueUrl, Map<String, ChangeMessageVisibilityEntry> entries) {
         super(createRequest(queueUrl, entries), queueUrl,

@@ -8,12 +8,15 @@ import com.amazonaws.services.sqs.model.DeleteMessageBatchResult;
 import com.amazonaws.services.sqs.model.transform.DeleteMessageBatchRequestMarshaller;
 import com.amazonaws.services.sqs.model.transform.DeleteMessageBatchResultStaxUnmarshaller;
 import com.bandwidth.sqs.action.adapter.SqsAwsSdkAction;
+import com.bandwidth.sqs.action.adapter.SqsAwsSdkBatchAction;
 import com.bandwidth.sqs.queue.entry.DeleteMessageEntry;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class DeleteMessageBatchAction extends SqsAwsSdkAction<DeleteMessageBatchRequest, DeleteMessageBatchResult> {
+public class DeleteMessageBatchAction
+        extends SqsAwsSdkBatchAction<DeleteMessageBatchRequest, DeleteMessageBatchResult> {
+
     public DeleteMessageBatchAction(String queueUrl, Map<String, DeleteMessageEntry> entries) {
         super(createRequest(queueUrl, entries), queueUrl, new DeleteMessageBatchRequestMarshaller(),
                 new DeleteMessageBatchResultStaxUnmarshaller());

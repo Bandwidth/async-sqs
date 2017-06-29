@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.util.Optional;
 
 public class ReceiveMessagesAction extends SqsAwsSdkAction<ReceiveMessageRequest, ReceiveMessageResult> {
+
     public ReceiveMessagesAction(String queueUrl, int maxMessages, Optional<Duration> waitTime,
             Optional<Duration> visibilityTimeout) {
 

@@ -71,6 +71,11 @@ public class SqsAwsSdkAction<RequestT extends AmazonWebServiceRequest, ResponseT
     }
 
     @Override
+    public boolean isBatchAction() {
+        return false;
+    }
+
+    @Override
     public Request toHttpRequest(AWSCredentials credentials) {
         URI fullUri = URI.create(requestUrl);
         URI endpoint = URI.create(fullUri.getScheme() + SCHEME_SEPERATOR + fullUri.getHost());

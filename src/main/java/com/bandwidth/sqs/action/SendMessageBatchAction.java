@@ -8,12 +8,13 @@ import com.amazonaws.services.sqs.model.SendMessageBatchResult;
 import com.amazonaws.services.sqs.model.transform.SendMessageBatchRequestMarshaller;
 import com.amazonaws.services.sqs.model.transform.SendMessageBatchResultStaxUnmarshaller;
 import com.bandwidth.sqs.action.adapter.SqsAwsSdkAction;
+import com.bandwidth.sqs.action.adapter.SqsAwsSdkBatchAction;
 import com.bandwidth.sqs.queue.entry.SendMessageEntry;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class SendMessageBatchAction extends SqsAwsSdkAction<SendMessageBatchRequest, SendMessageBatchResult> {
+public class SendMessageBatchAction extends SqsAwsSdkBatchAction<SendMessageBatchRequest, SendMessageBatchResult> {
 
     public SendMessageBatchAction(String queueUrl, Map<String, SendMessageEntry> entries) {
         super(createRequest(queueUrl, entries), queueUrl, new SendMessageBatchRequestMarshaller(),

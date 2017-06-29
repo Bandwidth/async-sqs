@@ -43,7 +43,6 @@ public class RetryingSqsRequestSenderTest {
                 .thenThrow(new RuntimeException())
                 .thenReturn(Single.just(ACTION_RESPONSE));
         requestSender.sendRequest(actionMock).test().assertValue(ACTION_RESPONSE);
-        ;
         verify(delegateMock, times(2)).sendRequest(any());//exactly 2 requests sent
     }
 
@@ -69,5 +68,15 @@ public class RetryingSqsRequestSenderTest {
                 .thenThrow(SERVER_EXCEPTION);
         requestSender.sendRequest(actionMock).test().assertError(AmazonSQSException.class);
         verify(delegateMock, times(2)).sendRequest(any());//exactly 2 requests sent
+    }
+
+    @Test
+    public void testNoRetryIfBatchAction() {
+        when(actionMock.isBatchAction()).thenReturn(true);
+        when(delegateMock.sendRequest(any()))
+                .thenThrow(new RuntimeException());
+
+        requestSender.sendRequest(actionMock).test().assertError(RuntimeException.class);
+        verify(delegateMock).sendRequest(any());
     }
 }
