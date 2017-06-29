@@ -341,7 +341,7 @@ public class SqsConsumer<T> {
 
         @Override
         public void onError(Throwable exception) {
-            LOG.error("SQS receive message failed for queue [{}]", exception, sqsQueue.getQueueUrl());
+            LOG.error("SQS receive message failed for queue [{}]", sqsQueue.getQueueUrl(), exception);
             always();
         }
 
