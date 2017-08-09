@@ -271,8 +271,9 @@ public class SqsConsumer<T> {
             return Completable.complete();
         }
         Duration visibilityTimeout = queueAttributes.getVisibilityTimeout();
+        Instant expirationTime = message.getReceivedTime().plus(visibilityTimeout);
         MessageAcknowledger<T> acknowledger =
-                new MessageAcknowledger<>(sqsQueue, message.getReceiptHandle(), visibilityTimeout);
+                new MessageAcknowledger<>(sqsQueue, message.getReceiptHandle(), expirationTime);
 
         Completable.fromRunnable(() -> handler.handleMessage(message, acknowledger))
                 .andThen(acknowledger.getAckMode())

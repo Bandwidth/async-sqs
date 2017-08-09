@@ -3,6 +3,7 @@ package com.bandwidth.sqs.consumer.acknowledger;
 import com.bandwidth.sqs.queue.SqsQueue;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -18,14 +19,17 @@ public class MessageAcknowledger<T> {
     private final String receiptId;
     private final SingleSubject<AckMode> ackModeSingle;
     private final CompletableSubject ackingComplete;
-    private final Duration timeout;
+    private final Instant expirationTime;
 
-    public MessageAcknowledger(SqsQueue<T> sqsQueue, String receiptId, Duration timeout) {
-        this.timeout = timeout;
+    public MessageAcknowledger(SqsQueue<T> sqsQueue, String receiptId, Instant expirationTime) {
+        this.expirationTime = expirationTime;
         this.sqsQueue = sqsQueue;
         this.receiptId = receiptId;
         this.ackModeSingle = SingleSubject.create();
         this.ackingComplete = CompletableSubject.create();
+
+        Duration duration = Duration.between(Instant.now(), expirationTime);
+        Completable.timer(duration.toMillis(), TimeUnit.MILLISECONDS).subscribe(this::ignore);
     }
 
     /**
@@ -36,7 +40,7 @@ public class MessageAcknowledger<T> {
         this.receiptId = delegate.receiptId;
         this.ackModeSingle = delegate.ackModeSingle;
         this.ackingComplete = delegate.ackingComplete;
-        this.timeout = delegate.timeout;
+        this.expirationTime = delegate.expirationTime;
     }
 
     /**
@@ -123,9 +127,7 @@ public class MessageAcknowledger<T> {
      * this will return AckMode.IGNORE
      */
     public Single<AckMode> getAckMode() {
-        return ackModeSingle
-                .timeout(timeout.getSeconds(), TimeUnit.SECONDS)
-                .onErrorReturnItem(AckMode.IGNORE);
+        return ackModeSingle;
     }
 
     /**
@@ -133,9 +135,7 @@ public class MessageAcknowledger<T> {
      * DELETE, this will be completed when the message was deleted from SQS
      */
     public Completable getCompletable() {
-        return ackingComplete
-                .timeout(timeout.getSeconds(), TimeUnit.SECONDS)
-                .onErrorComplete();
+        return ackingComplete;
     }
 
     public SqsQueue<T> getQueue() {

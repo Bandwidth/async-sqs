@@ -16,6 +16,7 @@ import com.bandwidth.sqs.queue.SqsQueue;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.time.Instant;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
@@ -30,7 +31,7 @@ public class MessageAcknowledgerTest {
     private final SqsQueue<String> sqsQueueMock = mock(SqsQueue.class);
     private final SqsQueue<Object> sqsObjectQueueMock = mock(SqsQueue.class);
     private final MessageAcknowledger<String> messageAcknowledger =
-            new MessageAcknowledger(sqsQueueMock, RECEIPT_ID, TIMEOUT);
+            new MessageAcknowledger(sqsQueueMock, RECEIPT_ID, Instant.now().plus(TIMEOUT));
 
     public MessageAcknowledgerTest() {
         when(sqsQueueMock.deleteMessage(any(String.class))).thenReturn(Completable.complete());
@@ -85,7 +86,7 @@ public class MessageAcknowledgerTest {
     @Test
     public void testTimeout() {
         MessageAcknowledger<String> messageAcknowledger =
-                new MessageAcknowledger(sqsQueueMock, RECEIPT_ID, Duration.ZERO);
+                new MessageAcknowledger(sqsQueueMock, RECEIPT_ID, Instant.now());
         messageAcknowledger.getCompletable().blockingAwait();
         assertThat(messageAcknowledger.getAckMode().blockingGet()).isEqualTo(AckMode.IGNORE);
 
