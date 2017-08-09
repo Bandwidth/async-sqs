@@ -89,7 +89,6 @@ public class MessageAcknowledgerTest {
                 new MessageAcknowledger(sqsQueueMock, RECEIPT_ID, Instant.now());
         messageAcknowledger.getCompletable().blockingAwait();
         assertThat(messageAcknowledger.getAckMode().blockingGet()).isEqualTo(AckMode.IGNORE);
-
     }
 
     @Test
