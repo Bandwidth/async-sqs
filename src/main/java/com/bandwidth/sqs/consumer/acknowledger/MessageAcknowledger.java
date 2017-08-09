@@ -3,7 +3,9 @@ package com.bandwidth.sqs.consumer.acknowledger;
 import com.bandwidth.sqs.queue.SqsQueue;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
@@ -17,12 +19,17 @@ public class MessageAcknowledger<T> {
     private final String receiptId;
     private final SingleSubject<AckMode> ackModeSingle;
     private final CompletableSubject ackingComplete;
+    private final Instant expirationTime;
 
-    public MessageAcknowledger(SqsQueue<T> sqsQueue, String receiptId) {
+    public MessageAcknowledger(SqsQueue<T> sqsQueue, String receiptId, Instant expirationTime) {
+        this.expirationTime = expirationTime;
         this.sqsQueue = sqsQueue;
         this.receiptId = receiptId;
         this.ackModeSingle = SingleSubject.create();
         this.ackingComplete = CompletableSubject.create();
+
+        Duration duration = Duration.between(Instant.now(), expirationTime);
+        Completable.timer(duration.toMillis(), TimeUnit.MILLISECONDS).subscribe(this::ignore);
     }
 
     /**
@@ -33,6 +40,7 @@ public class MessageAcknowledger<T> {
         this.receiptId = delegate.receiptId;
         this.ackModeSingle = delegate.ackModeSingle;
         this.ackingComplete = delegate.ackingComplete;
+        this.expirationTime = delegate.expirationTime;
     }
 
     /**
@@ -114,10 +122,18 @@ public class MessageAcknowledger<T> {
                 .flatMapCompletable((msgId) -> sqsQueue.deleteMessage(receiptId));
     }
 
+    /**
+     * @return a Single that is completed when the ack mode is chosen, or the visibility timeout expires. If it expires,
+     * this will return AckMode.IGNORE
+     */
     public Single<AckMode> getAckMode() {
         return ackModeSingle;
     }
 
+    /**
+     * @return a Completable that completes when the acking action has completed. For example, if the ack mode is
+     * DELETE, this will be completed when the message was deleted from SQS
+     */
     public Completable getCompletable() {
         return ackingComplete;
     }

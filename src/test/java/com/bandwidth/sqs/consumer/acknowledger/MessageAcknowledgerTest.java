@@ -8,12 +8,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import static com.bandwidth.sqs.consumer.acknowledger.MessageAcknowledger.AckMode;
+
 import com.amazonaws.services.sqs.model.Message;
 import com.bandwidth.sqs.queue.SqsQueue;
 
 import org.junit.Test;
 
 import java.time.Duration;
+import java.time.Instant;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
@@ -23,10 +26,12 @@ public class MessageAcknowledgerTest {
     private static final String RECEIPT_ID = "123-adfg-w4-dfga-346-zfg";
     private static final String MESSAGE_ID = "message-id-q4tqeeg";
     private static final String MESSAGE = "message body";
+    private static final Duration TIMEOUT = Duration.ofSeconds(30);
 
     private final SqsQueue<String> sqsQueueMock = mock(SqsQueue.class);
     private final SqsQueue<Object> sqsObjectQueueMock = mock(SqsQueue.class);
-    private final MessageAcknowledger<String> messageAcknowledger = new MessageAcknowledger(sqsQueueMock, RECEIPT_ID);
+    private final MessageAcknowledger<String> messageAcknowledger =
+            new MessageAcknowledger(sqsQueueMock, RECEIPT_ID, Instant.now().plus(TIMEOUT));
 
     public MessageAcknowledgerTest() {
         when(sqsQueueMock.deleteMessage(any(String.class))).thenReturn(Completable.complete());
@@ -79,13 +84,21 @@ public class MessageAcknowledgerTest {
     }
 
     @Test
+    public void testTimeout() {
+        MessageAcknowledger<String> messageAcknowledger =
+                new MessageAcknowledger(sqsQueueMock, RECEIPT_ID, Instant.now());
+        messageAcknowledger.getCompletable().blockingAwait();
+        assertThat(messageAcknowledger.getAckMode().blockingGet()).isEqualTo(AckMode.IGNORE);
+    }
+
+    @Test
     public void testSuccessfulAckModes() {
-        assertThat(MessageAcknowledger.AckMode.DELETE.isSuccessful()).isTrue();
-        assertThat(MessageAcknowledger.AckMode.TRANSFER.isSuccessful()).isTrue();
-        assertThat(MessageAcknowledger.AckMode.IGNORE.isSuccessful()).isFalse();
-        assertThat(MessageAcknowledger.AckMode.RETRY.isSuccessful()).isFalse();
-        assertThat(MessageAcknowledger.AckMode.MODIFY.isSuccessful()).isFalse();
-        assertThat(MessageAcknowledger.AckMode.DELAY.isSuccessful()).isFalse();
+        assertThat(AckMode.DELETE.isSuccessful()).isTrue();
+        assertThat(AckMode.TRANSFER.isSuccessful()).isTrue();
+        assertThat(AckMode.IGNORE.isSuccessful()).isFalse();
+        assertThat(AckMode.RETRY.isSuccessful()).isFalse();
+        assertThat(AckMode.MODIFY.isSuccessful()).isFalse();
+        assertThat(AckMode.DELAY.isSuccessful()).isFalse();
     }
 
     @Test

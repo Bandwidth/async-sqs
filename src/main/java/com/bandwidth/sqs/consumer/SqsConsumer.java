@@ -270,7 +270,10 @@ public class SqsConsumer<T> {
         if (message == null) {
             return Completable.complete();
         }
-        MessageAcknowledger<T> acknowledger = new MessageAcknowledger<>(sqsQueue, message.getReceiptHandle());
+        Duration visibilityTimeout = queueAttributes.getVisibilityTimeout();
+        Instant expirationTime = message.getReceivedTime().plus(visibilityTimeout);
+        MessageAcknowledger<T> acknowledger =
+                new MessageAcknowledger<>(sqsQueue, message.getReceiptHandle(), expirationTime);
 
         Completable.fromRunnable(() -> handler.handleMessage(message, acknowledger))
                 .andThen(acknowledger.getAckMode())
@@ -286,12 +289,10 @@ public class SqsConsumer<T> {
                     }
                 });
 
-        acknowledger.getCompletable()
-                .timeout(queueAttributes.getVisibilityTimeout().getSeconds(), TimeUnit.SECONDS)
-                .doFinally(() -> {
-                    remainingPermits.incrementAndGet();
-                    update();
-                }).subscribe();
+        acknowledger.getCompletable().subscribe(() -> {
+            remainingPermits.incrementAndGet();
+            update();
+        });
         return acknowledger.getCompletable();
     }
 
