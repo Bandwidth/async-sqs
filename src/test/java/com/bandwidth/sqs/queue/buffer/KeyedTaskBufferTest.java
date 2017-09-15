@@ -11,11 +11,17 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import io.reactivex.subjects.CompletableSubject;
 
 public class KeyedTaskBufferTest {
     private static final int MAX_BUFFER_SIZE = 3;
+    private static final int BUFFER_SIZE_2 = 2;
     private static final Duration MAX_WAIT_MILLIS_INFINITE = Duration.ofMillis(Integer.MAX_VALUE);
     private static final Duration MAX_WAIT_MILLIS_100 = Duration.ofMillis(100);
     private static final Duration MAX_WAIT_MILLIS_0 = Duration.ofMillis(0);
@@ -25,6 +31,8 @@ public class KeyedTaskBufferTest {
     private int count = 0;
 
     private final Task<String, Integer> task = (key, map) -> map.values().forEach(value -> count += value);
+
+
 
     private final KeyedTaskBuffer<String, Integer> taskBuffer = new KeyedTaskBuffer<>(MAX_BUFFER_SIZE,
             MAX_WAIT_MILLIS_100, task
@@ -77,6 +85,25 @@ public class KeyedTaskBufferTest {
         verify(timerMock).schedule(timerTaskCaptor.capture(), anyLong());
         timerTaskCaptor.getValue().run();
         assertThat(count).isEqualTo(1 + 2 + 3);
+    }
+
+    @Test
+    public void shouldContinueRunningAfterExceptionInTask(){
+        AtomicBoolean firstRun = new AtomicBoolean(true);
+        CompletableSubject completedSecondRun = CompletableSubject.create();
+        KeyedTaskBuffer<String, Integer> taskBuffer = new KeyedTaskBuffer<>(BUFFER_SIZE_2, MAX_WAIT_MILLIS_100,
+                (key, batch) -> {
+                    if(firstRun.getAndSet(false)){
+                        throw new RuntimeException("Test exception");
+                    }else{
+                        completedSecondRun.onComplete();
+                    }
+                });
+        taskBuffer.addData(KEY_A, 1);
+        taskBuffer.addData(KEY_B, 1);
+
+        //unit test can only finish if this is completed
+        completedSecondRun.timeout(1000, TimeUnit.MILLISECONDS).blockingAwait();
     }
 }
 

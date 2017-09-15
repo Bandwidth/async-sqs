@@ -13,11 +13,8 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import io.reactivex.subjects.SingleSubject;
-
 /**
- * A buffer that buffers individual data, collecting it in bucket by key, then running a task to batch
- * process the data
+ * A buffer that buffers individual data, collecting it in bucket by key, then running a task to batch process the data
  *
  * @param <K> Key
  * @param <D> Data
@@ -43,7 +40,6 @@ public class KeyedTaskBuffer<K, D> {
             buffers.put(key, buffer);
             timer.schedule(timerTask, maxWait.toMillis());
         }
-        SingleSubject subject = SingleSubject.create();
         buffer.add(data);
         processBatchIfNeeded(key, false);
     }
@@ -72,7 +68,11 @@ public class KeyedTaskBuffer<K, D> {
 
         @Override
         public void run() {
-            processBatchIfNeeded(key, true);
+            try {
+                processBatchIfNeeded(key, true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
