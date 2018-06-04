@@ -25,7 +25,7 @@ public class RetryingSqsRequestSender implements SqsRequestSender {
                         return false;
                     }
                     if (error instanceof AmazonSQSException) {
-                        return ((AmazonSQSException) error).getErrorType() == AmazonServiceException.ErrorType.Service;
+                        return ((AmazonSQSException) error).getErrorType() != AmazonServiceException.ErrorType.Client;
                     }
                     return true;
                 }).subscribeWith(SingleSubject.create());//convert to Hot single
