@@ -63,9 +63,8 @@ public class SqsClient {
      */
     public Single<SqsQueue<String>> upsertQueue(SqsQueueConfig queueConfig, SqsQueueClientConfig clientConfig) {
         CreateQueueAction action = new CreateQueueAction(queueConfig);
-        Single<SqsQueue<String>> output = requestSender.sendRequest(action).map(createQueueResult -> {
-            return new BufferedStringSqsQueue(createQueueResult.getQueueUrl(), requestSender, clientConfig);
-        });
+        Single<SqsQueue<String>> output = requestSender.sendRequest(action)
+                .map(createQueueResult -> getQueueFromUrl(createQueueResult.getQueueUrl(), clientConfig));
         return output.onErrorResumeNext((err) -> {
             if (err instanceof AmazonSQSException) {
                 AmazonSQSException awsException = (AmazonSQSException) err;

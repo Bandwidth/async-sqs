@@ -59,7 +59,7 @@ public class RetryingSqsQueue<T> implements SqsQueue<T> {
             return false;
         }
         if (error instanceof AmazonSQSException) {
-            return ((AmazonSQSException) error).getErrorType() == AmazonServiceException.ErrorType.Service;
+            return ((AmazonSQSException) error).getErrorType() != AmazonServiceException.ErrorType.Client;
         }
         return true;
     }
