@@ -372,6 +372,20 @@ public class SqsConsumerTest {
     }
 
     @Test
+    public void testShutdownTrueWhenComplete() {
+        consumer.setMessageBuffer(messageBufferEmpty);
+        boolean result = consumer.shutdown(Duration.ofMillis(100));
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    public void testShutdownFalseWhenTimeout() {
+        consumer.setMessageBuffer(messageBufferSmall);
+        boolean result = consumer.shutdown(Duration.ofMillis(100));
+        assertThat(result).isFalse();
+    }
+
+    @Test
     public void testRetryAck() {
         ConsumerHandler<String> handlerSpy = spy(new RetryingHandler());
         consumer = new SqsConsumerBuilder(consumerManagerMock, sqsQueueMock, handlerSpy)
