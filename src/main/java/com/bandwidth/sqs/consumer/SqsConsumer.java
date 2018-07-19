@@ -35,6 +35,8 @@ import io.reactivex.subjects.CompletableSubject;
 
 import static com.bandwidth.sqs.consumer.acknowledger.MessageAcknowledger.AckMode;
 
+import javax.annotation.PreDestroy;
+
 public class SqsConsumer<T> {
     public static final int NUM_MESSAGES_PER_REQUEST = 10;
     public static final Duration LOAD_BALANCED_REQUEST_WAIT_TIME = Duration.ofSeconds(1);
@@ -154,19 +156,27 @@ public class SqsConsumer<T> {
      * Shuts down the consumer, and blocks until the shutdown completes with a
      * default timeout of 30 seconds
      */
-    public void shutdown() {
-        shutdown(DEFAULT_SHUTDOWN_TIMEOUT);
+    @PreDestroy
+    public boolean shutdown() {
+        return shutdown(DEFAULT_SHUTDOWN_TIMEOUT);
     }
 
     /**
      * Shuts down the consumer, and blocks until the shutdown completes.
      * Throws a timeout exception if it fails to shutdown in the timeout specified
      */
-    public void shutdown(Duration timeout) {
+    public boolean shutdown(Duration timeout) {
+        LOG.info("Beginning graceful shutdown of SQS Consumer");
         permitChangeDisposable.dispose();
-        shutdownAsync()
-                .timeout(timeout.getSeconds(), TimeUnit.SECONDS)
-                .blockingAwait();
+        boolean completed = shutdownAsync()
+                .blockingAwait(timeout.getSeconds(), TimeUnit.SECONDS);
+
+        if(completed) {
+            LOG.info("Graceful shutdown of SQS consumer complete");
+        } else {
+            LOG.error("Error shutting down SQS Consumer");
+        }
+        return completed;
     }
 
     /**
