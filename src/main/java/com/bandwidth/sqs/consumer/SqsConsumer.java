@@ -271,8 +271,7 @@ public class SqsConsumer<T> {
             update();
             return null;
         } else {
-            int remainingPermitsCount = remainingPermits.decrementAndGet();
-            LOG.info("Remaining permits: {}", remainingPermitsCount);
+            remainingPermits.decrementAndGet();
             update();
             return message;
         }
@@ -302,8 +301,7 @@ public class SqsConsumer<T> {
                 });
 
         acknowledger.getCompletable().subscribe(() -> {
-            int remainingPermitsCount = remainingPermits.incrementAndGet();
-            LOG.info("Incremented permits to {}", remainingPermitsCount);
+            remainingPermits.incrementAndGet();
             update();
         });
         return acknowledger.getCompletable();
