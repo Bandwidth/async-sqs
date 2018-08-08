@@ -206,7 +206,7 @@ public class SqsConsumerTest {
 
     @Test
     public void testProcessNextMessageExpired() {
-        when(expirationStrategyMock.isExpired(any())).thenReturn(true);
+        when(expirationStrategyMock.isExpired(any(), any())).thenReturn(true);
         consumer.setMessageBuffer(messageBufferSmall);
         consumer.processNextMessage(consumer.getNextMessage());
         verify(consumerHandlerMock, never()).handleMessage(eq(SQS_MESSAGE), any());

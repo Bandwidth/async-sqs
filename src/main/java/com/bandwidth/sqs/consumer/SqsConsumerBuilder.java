@@ -5,6 +5,7 @@ import com.bandwidth.sqs.consumer.strategy.backoff.BackoffStrategy;
 import com.bandwidth.sqs.consumer.strategy.backoff.NullBackoffStrategy;
 import com.bandwidth.sqs.consumer.strategy.expiration.ExpirationStrategy;
 import com.bandwidth.sqs.consumer.strategy.expiration.NeverExpiresStrategy;
+import com.bandwidth.sqs.consumer.strategy.expiration.VisibilityTimeoutPercentageExpiration;
 import com.bandwidth.sqs.queue.SqsQueue;
 
 public class SqsConsumerBuilder<T> {
@@ -20,7 +21,7 @@ public class SqsConsumerBuilder<T> {
     int bufferSize = DEFAULT_BUFFER_SIZE;
     int priority = DEFAULT_PRIORITY;
     BackoffStrategy backoffStrategy = new NullBackoffStrategy();
-    ExpirationStrategy expirationStrategy = new NeverExpiresStrategy();
+    ExpirationStrategy expirationStrategy = new VisibilityTimeoutPercentageExpiration(0.5);
 
     /**
      * @param manager         A SqsConsumerManager that manages interactions between all of the consumers
@@ -82,7 +83,7 @@ public class SqsConsumerBuilder<T> {
      * @param priority A consumer with a higher priority (lower value) will have messages processed first
      *                 (0 is the highest priority)
      */
-    public SqsConsumerBuilder<T> withPriority(int priority){
+    public SqsConsumerBuilder<T> withPriority(int priority) {
         this.priority = priority;
         return this;
     }

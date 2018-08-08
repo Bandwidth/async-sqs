@@ -131,7 +131,6 @@ public class SqsConsumerManager<T> {
                 runnable.updateConsumer();
             }
             runnable.accept(message);//run the highest priority task
-
         });
     }
 

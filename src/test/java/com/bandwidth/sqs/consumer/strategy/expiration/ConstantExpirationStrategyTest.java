@@ -28,7 +28,7 @@ public class ConstantExpirationStrategyTest {
                 .receiptHandle(RECEIPT_HANDLE)
                 .build();
 
-        assertThat(constantExpirationStrategy.isExpired(message)).isTrue();
+        assertThat(constantExpirationStrategy.isExpired(message, null)).isTrue();
     }
 
     @Test
@@ -39,6 +39,6 @@ public class ConstantExpirationStrategyTest {
                 .receivedTime(Instant.now().minus(NEW_MESSAGE_AGE))
                 .receiptHandle(RECEIPT_HANDLE)
                 .build();
-        assertThat(constantExpirationStrategy.isExpired(timedMessage)).isFalse();
+        assertThat(constantExpirationStrategy.isExpired(timedMessage, null)).isFalse();
     }
 }

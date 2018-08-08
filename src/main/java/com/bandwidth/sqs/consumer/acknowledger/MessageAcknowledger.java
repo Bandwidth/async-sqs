@@ -11,6 +11,8 @@ import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.subjects.CompletableSubject;
 import io.reactivex.subjects.SingleSubject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class MessageAcknowledger<T> {
@@ -21,6 +23,8 @@ public class MessageAcknowledger<T> {
     private final CompletableSubject ackingComplete;
     private final Instant expirationTime;
 
+    private static final Logger LOG = LoggerFactory.getLogger(MessageAcknowledger.class);
+
     public MessageAcknowledger(SqsQueue<T> sqsQueue, String receiptId, Instant expirationTime) {
         this.expirationTime = expirationTime;
         this.sqsQueue = sqsQueue;
@@ -29,6 +33,7 @@ public class MessageAcknowledger<T> {
         this.ackingComplete = CompletableSubject.create();
 
         Duration duration = Duration.between(Instant.now(), expirationTime);
+        LOG.info("Expiring in {} millis ", duration.toMillis());
         Completable.timer(duration.toMillis(), TimeUnit.MILLISECONDS).subscribe(this::ignore);
     }
 
@@ -113,7 +118,7 @@ public class MessageAcknowledger<T> {
         doTransfer(newMessage, newQueue, delay).subscribeWith(ackingComplete);
     }
 
-    public void transfer(T newMessage, SqsQueue<T> newQueue){
+    public void transfer(T newMessage, SqsQueue<T> newQueue) {
         transfer(newMessage, newQueue, Optional.empty());
     }
 

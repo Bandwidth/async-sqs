@@ -171,7 +171,7 @@ public class SqsConsumer<T> {
         boolean completed = shutdownAsync()
                 .blockingAwait(timeout.getSeconds(), TimeUnit.SECONDS);
 
-        if(completed) {
+        if (completed) {
             LOG.info("Graceful shutdown of SQS consumer complete");
         } else {
             LOG.error("Error shutting down SQS Consumer");
@@ -265,12 +265,14 @@ public class SqsConsumer<T> {
         SqsMessage<T> message = messageBuffer.pop();
         waitingInQueue = false;
 
-        boolean expired = expirationStrategy.isExpired(message);
+        Duration visibilityTimeout = queueAttributes.getVisibilityTimeout();
+        boolean expired = expirationStrategy.isExpired(message, visibilityTimeout);
         if (expired) {
             update();
             return null;
         } else {
-            remainingPermits.decrementAndGet();
+            int remainingPermitsCount = remainingPermits.decrementAndGet();
+            LOG.info("Remaining permits: {}", remainingPermitsCount);
             update();
             return message;
         }
@@ -300,7 +302,8 @@ public class SqsConsumer<T> {
                 });
 
         acknowledger.getCompletable().subscribe(() -> {
-            remainingPermits.incrementAndGet();
+            int remainingPermitsCount = remainingPermits.incrementAndGet();
+            LOG.info("Incremented permits to {}", remainingPermitsCount);
             update();
         });
         return acknowledger.getCompletable();
