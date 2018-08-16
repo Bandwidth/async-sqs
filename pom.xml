@@ -4,7 +4,7 @@
 
     <groupId>com.bandwidth</groupId>
     <artifactId>async-sqs</artifactId>
-    <version>0.11.6-SNAPSHOT</version>
+    <version>0.11.6</version>
     <packaging>jar</packaging>
     <name>async-sqs</name>
     <description>async SQS library</description>
@@ -84,7 +84,7 @@
         <connection>scm:git:git://github.com/Bandwidth/async-sqs.git</connection>
         <developerConnection>scm:git:git@github.com:Bandwidth/async-sqs.git</developerConnection>
         <url>http://github.com/Bandwidth/async-sqs</url>
-      <tag>HEAD</tag>
+      <tag>async-sqs-0.11.6</tag>
   </scm>
     <build>
         <plugins>
