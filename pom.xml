@@ -4,7 +4,7 @@
 
     <groupId>com.bandwidth</groupId>
     <artifactId>async-sqs</artifactId>
-    <version>0.11.7-SNAPSHOT</version>
+    <version>0.11.6-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>async-sqs</name>
     <description>async SQS library</description>
