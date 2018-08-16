@@ -177,7 +177,7 @@ public class SqsConsumerTest {
 
         consumer.setMessageBuffer(messageBufferSmall);
         when(backoffStrategyMock.getDelayTime(anyDouble())).thenReturn(Duration.ofDays(999999));
-        consumer.checkIfBackoffDelayNeeded();
+        consumer.applyBackoffDelayIfNeeded();
         consumer.start();//backoffDelay prevents consumer from being queued
         verify(consumerManagerMock, never()).queueTask(any(), anyInt(), any());
     }
@@ -185,7 +185,7 @@ public class SqsConsumerTest {
     @Test
     public void testNegativeBackoffDelay() {
         when(backoffStrategyMock.getDelayTime(anyDouble())).thenReturn(Duration.ofDays(-1));
-        consumer.checkIfBackoffDelayNeeded();
+        consumer.applyBackoffDelayIfNeeded();
         verify(consumerManagerMock, never()).queueTask(any(), anyInt(), any());
     }
 
