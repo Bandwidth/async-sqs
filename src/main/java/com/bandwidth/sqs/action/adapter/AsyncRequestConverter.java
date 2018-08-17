@@ -19,7 +19,7 @@ import io.netty.handler.codec.http.HttpHeaders;
  */
 public class AsyncRequestConverter implements Function<SignableRequest<?>, Request> {
     public Request apply(SignableRequest<?> signableRequest) {
-        Multimap<String, String> headers = ArrayListMultimap.create(Multimaps.forMap(signableRequest.getHeaders()));
+        Multimap<CharSequence, String> headers = ArrayListMultimap.create(Multimaps.forMap(signableRequest.getHeaders()));
         headers.put(HttpHeaders.Names.CONTENT_TYPE, HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED);
         return new RequestBuilder()
                 .setMethod(signableRequest.getHttpMethod().name())
