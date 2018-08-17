@@ -119,7 +119,10 @@ public class MessageAcknowledger<T> {
 
     private Completable doTransfer(T newMessage, SqsQueue<T> newQueue, Optional<Duration> delay) {
         return newQueue.publishMessage(newMessage, delay)
-                .flatMapCompletable((msgId) -> sqsQueue.deleteMessage(receiptId));
+                .flatMapCompletable((msgId) -> {
+                    Completable completable = sqsQueue.deleteMessage(receiptId);
+                    return completable;
+                });
     }
 
     /**

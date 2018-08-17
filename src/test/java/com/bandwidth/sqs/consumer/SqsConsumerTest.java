@@ -4,6 +4,7 @@ import static com.bandwidth.sqs.queue.MutableSqsQueueAttributesTest.ATTRIBUTES;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
@@ -66,9 +67,9 @@ public class SqsConsumerTest {
     private static final int MESSAGE_COUNT = 7;
     private static final Duration WINDOW_SIZE = Duration.ofSeconds(10);
 
-    private final ArrayDeque<SqsMessage<String>> messageBufferEmpty = spy(new ArrayDeque<SqsMessage<String>>());
-    private final ArrayDeque<SqsMessage<String>> messageBufferSmall = spy(new ArrayDeque<SqsMessage<String>>());
-    private final ArrayDeque<SqsMessage<String>> messageBufferFull = spy(new ArrayDeque<SqsMessage<String>>());
+    private final ArrayDeque<SqsMessage<String>> messageBufferEmpty = spy(new ArrayDeque<>());
+    private final ArrayDeque<SqsMessage<String>> messageBufferSmall = spy(new ArrayDeque<>());
+    private final ArrayDeque<SqsMessage<String>> messageBufferFull = spy(new ArrayDeque<>());
     private final BackoffStrategy backoffStrategyMock = mock(BackoffStrategy.class);
     private final SqsConsumerManager consumerManagerMock = mock(SqsConsumerManager.class);
     private final ConsumerHandler<String> consumerHandlerMock = mock(ConsumerHandler.class);
@@ -205,11 +206,53 @@ public class SqsConsumerTest {
     }
 
     @Test
-    public void testProcessNextMessageExpired() {
+    public void testProcessNextMessageExpiredReplace() {
         when(expirationStrategyMock.isExpired(any(), any())).thenReturn(true);
+        when(sqsQueueMock.publishMessage(any(), any())).thenReturn(Single.just(MESSAGE_ID));
         consumer.setMessageBuffer(messageBufferSmall);
         consumer.processNextMessage(consumer.getNextMessage());
+
         verify(consumerHandlerMock, never()).handleMessage(eq(SQS_MESSAGE), any());
+        verify(sqsQueueMock).publishMessage(any(), any()); //make sure a new message is published
+        verify(sqsQueueMock).deleteMessage(anyString());// ...and the old one is deleted
+    }
+
+    @Test
+    public void testProcessNextMessageExpiredReplaceAlmostTooOld() {
+        when(expirationStrategyMock.isExpired(any(), any())).thenReturn(true);
+        when(sqsQueueMock.publishMessage(any(), any())).thenReturn(Single.just(MESSAGE_ID));
+
+        ArrayDeque<SqsMessage<String>> messageBuffer = new ArrayDeque<>();
+        messageBuffer.push(SqsMessage.<String>builder()
+                .from(SQS_MESSAGE)
+                .receivedTime(Instant.now().minus(ATTRIBUTES.getVisibilityTimeout()).plus(Duration.ofSeconds(6)))
+                .build());
+
+        consumer.setMessageBuffer(messageBuffer);
+        consumer.processNextMessage(consumer.getNextMessage());
+
+        verify(consumerHandlerMock, never()).handleMessage(eq(SQS_MESSAGE), any());
+        verify(sqsQueueMock).publishMessage(any(), any()); //make sure a new message is published
+        verify(sqsQueueMock).deleteMessage(anyString());// ...and the old one is deleted
+    }
+
+    @Test
+    public void testProcessNextMessageExpiredIgnore() {
+        when(expirationStrategyMock.isExpired(any(), any())).thenReturn(true);
+        when(sqsQueueMock.publishMessage(any(), any())).thenReturn(Single.just(MESSAGE_ID));
+
+        ArrayDeque<SqsMessage<String>> messageBuffer = new ArrayDeque<>();
+        messageBuffer.push(SqsMessage.<String>builder()
+                .from(SQS_MESSAGE)
+                .receivedTime(Instant.now().minus(ATTRIBUTES.getVisibilityTimeout()))
+                .build());
+
+        consumer.setMessageBuffer(messageBuffer);
+        consumer.processNextMessage(consumer.getNextMessage());
+
+        verify(consumerHandlerMock, never()).handleMessage(eq(SQS_MESSAGE), any());
+        verify(sqsQueueMock, never()).publishMessage(any(), any());
+        verify(sqsQueueMock, never()).deleteMessage(anyString());
     }
 
     @Test
