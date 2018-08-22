@@ -5,7 +5,7 @@ import com.bandwidth.sqs.queue.SqsMessage;
 import java.time.Duration;
 
 /**
- * Considers a message expired after it's age is a certain percentage of the visibility timeout
+ * Considers a message expired after its age is a certain percentage of the visibility timeout
  */
 public class VisibilityTimeoutPercentageExpiration implements ExpirationStrategy {
 

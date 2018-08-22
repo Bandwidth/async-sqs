@@ -42,7 +42,6 @@ public class SqsConsumer<T> {
     public static final Duration LOAD_BALANCED_REQUEST_WAIT_TIME = Duration.ofSeconds(1);
     public static final Duration MAX_WAIT_TIME = Duration.ofSeconds(20);
     private static final Duration DEFAULT_SHUTDOWN_TIMEOUT = Duration.ofSeconds(30);
-    private static final Duration MIN_TIME_TO_REPLACE_MESSAGE = Duration.ofSeconds(5);
 
     static final long MESSAGE_SUCCESS = 0;
     static final long MESSAGE_FAILURE = 1;
