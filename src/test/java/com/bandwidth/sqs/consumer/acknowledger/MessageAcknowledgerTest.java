@@ -17,6 +17,7 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
@@ -31,7 +32,7 @@ public class MessageAcknowledgerTest {
     private final SqsQueue<String> sqsQueueMock = mock(SqsQueue.class);
     private final SqsQueue<Object> sqsObjectQueueMock = mock(SqsQueue.class);
     private final MessageAcknowledger<String> messageAcknowledger =
-            new MessageAcknowledger(sqsQueueMock, RECEIPT_ID, Instant.now().plus(TIMEOUT));
+            new MessageAcknowledger(sqsQueueMock, RECEIPT_ID, Optional.of(Instant.now().plus(TIMEOUT)));
 
     public MessageAcknowledgerTest() {
         when(sqsQueueMock.deleteMessage(any(String.class))).thenReturn(Completable.complete());
@@ -86,9 +87,17 @@ public class MessageAcknowledgerTest {
     @Test
     public void testTimeout() {
         MessageAcknowledger<String> messageAcknowledger =
-                new MessageAcknowledger(sqsQueueMock, RECEIPT_ID, Instant.now());
+                new MessageAcknowledger(sqsQueueMock, RECEIPT_ID, Optional.of(Instant.now()));
         messageAcknowledger.getCompletable().blockingAwait();
         assertThat(messageAcknowledger.getAckMode().blockingGet()).isEqualTo(AckMode.IGNORE);
+    }
+
+    @Test
+    public void testNoTimeout() {
+        MessageAcknowledger<String> messageAcknowledger =
+                new MessageAcknowledger(sqsQueueMock, RECEIPT_ID, Optional.empty());
+        messageAcknowledger.getCompletable().test().assertNotComplete();
+        messageAcknowledger.getAckMode().test().assertNotComplete();
     }
 
     @Test

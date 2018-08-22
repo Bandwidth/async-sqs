@@ -98,6 +98,7 @@ public class SqsConsumerTest {
                 .withBufferSize(MAX_QUEUE_SIZE)
                 .withBackoffStrategy(backoffStrategyMock)
                 .withExpirationStrategy(expirationStrategyMock)
+                .withAutoExpire(true)
                 .build();
 
         consumer.setLoadBalanceStrategy(loadBalanceStrategyMock);
@@ -153,6 +154,7 @@ public class SqsConsumerTest {
                 .withBufferSize(MAX_QUEUE_SIZE_1)
                 .withBackoffStrategy(backoffStrategyMock)
                 .withExpirationStrategy(expirationStrategyMock)
+                .withAutoExpire(false)
                 .build();
         consumer.setMessageBuffer(messageBufferSmall);
         consumer.start();//buffer is full, no requests will be started
@@ -174,6 +176,7 @@ public class SqsConsumerTest {
                 .withBufferSize(MAX_QUEUE_SIZE_1)
                 .withBackoffStrategy(backoffStrategyMock)
                 .withExpirationStrategy(expirationStrategyMock)
+                .withAutoExpire(true)
                 .build();
 
         consumer.setMessageBuffer(messageBufferSmall);
@@ -203,37 +206,6 @@ public class SqsConsumerTest {
         consumer.setMessageBuffer(messageBufferSmall);
         consumer.processNextMessage(consumer.getNextMessage());
         verify(consumerHandlerMock).handleMessage(eq(SQS_MESSAGE), any());
-    }
-
-    @Test
-    public void testProcessNextMessageExpiredReplace() {
-        when(expirationStrategyMock.isExpired(any(), any())).thenReturn(true);
-        when(sqsQueueMock.publishMessage(any(), any())).thenReturn(Single.just(MESSAGE_ID));
-        consumer.setMessageBuffer(messageBufferSmall);
-        consumer.processNextMessage(consumer.getNextMessage());
-
-        verify(consumerHandlerMock, never()).handleMessage(eq(SQS_MESSAGE), any());
-        verify(sqsQueueMock).publishMessage(any(), any()); //make sure a new message is published
-        verify(sqsQueueMock).deleteMessage(anyString());// ...and the old one is deleted
-    }
-
-    @Test
-    public void testProcessNextMessageExpiredReplaceAlmostTooOld() {
-        when(expirationStrategyMock.isExpired(any(), any())).thenReturn(true);
-        when(sqsQueueMock.publishMessage(any(), any())).thenReturn(Single.just(MESSAGE_ID));
-
-        ArrayDeque<SqsMessage<String>> messageBuffer = new ArrayDeque<>();
-        messageBuffer.push(SqsMessage.<String>builder()
-                .from(SQS_MESSAGE)
-                .receivedTime(Instant.now().minus(ATTRIBUTES.getVisibilityTimeout()).plus(Duration.ofSeconds(6)))
-                .build());
-
-        consumer.setMessageBuffer(messageBuffer);
-        consumer.processNextMessage(consumer.getNextMessage());
-
-        verify(consumerHandlerMock, never()).handleMessage(eq(SQS_MESSAGE), any());
-        verify(sqsQueueMock).publishMessage(any(), any()); //make sure a new message is published
-        verify(sqsQueueMock).deleteMessage(anyString());// ...and the old one is deleted
     }
 
     @Test

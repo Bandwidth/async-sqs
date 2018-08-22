@@ -66,6 +66,7 @@ public class SqsConsumer<T> {
     private final Disposable permitChangeDisposable;
     private final SqsQueueAttributes queueAttributes;
     private final int priority;
+    private final boolean autoExpire;
 
     private ArrayDeque<SqsMessage<T>> messageBuffer = new ArrayDeque<>();
     private boolean waitingInQueue = false;
@@ -86,9 +87,9 @@ public class SqsConsumer<T> {
         this.backoffStrategy = requireNonNull(builder.backoffStrategy);
         this.manager = requireNonNull(builder.consumerManager);
         this.expirationStrategy = requireNonNull(builder.expirationStrategy);
-
         this.sqsQueue = builder.sqsQueue;
         this.priority = builder.priority;
+        this.autoExpire = builder.autoExpire;
         this.queueAttributes = sqsQueue.getAttributes().blockingGet();
         this.maxPermits = new AtomicInteger(builder.numPermits);
         this.remainingPermits = new AtomicInteger(builder.numPermits);
@@ -272,16 +273,10 @@ public class SqsConsumer<T> {
 
     Completable processNextMessage(SqsMessage<T> message) {
         Duration visibilityTimeout = queueAttributes.getVisibilityTimeout();
-        Instant expirationTime = message.getReceivedTime().plus(visibilityTimeout);
         MessageAcknowledger<T> acknowledger =
-                new MessageAcknowledger<>(sqsQueue, message.getReceiptHandle(), expirationTime);
-
+                new MessageAcknowledger<>(sqsQueue, message.getReceiptHandle(), getMessageAutoExpiration(message));
         if (expirationStrategy.isExpired(message, visibilityTimeout)) {
-            if (message.getMessageAge().plus(MIN_TIME_TO_REPLACE_MESSAGE).compareTo(visibilityTimeout) > 0) {
-                acknowledger.ignore();
-            } else {
-                acknowledger.replace(message.getBody());
-            }
+            acknowledger.ignore();
         } else {
             Completable.fromRunnable(() -> handler.handleMessage(message, acknowledger))
                     .andThen(acknowledger.getAckMode())
@@ -308,6 +303,16 @@ public class SqsConsumer<T> {
     public enum RequestType {
         LONG_POLLING,
         LOAD_BALANCED
+    }
+
+    private Optional<Instant> getMessageAutoExpiration(SqsMessage<T> message) {
+        if (autoExpire) {
+            Duration visibilityTimeout = queueAttributes.getVisibilityTimeout();
+            Instant expirationTime = message.getReceivedTime().plus(visibilityTimeout);
+            return Optional.of(expirationTime);
+        } else {
+            return Optional.empty();
+        }
     }
 
     private void startNewRequest(RequestType requestType) {

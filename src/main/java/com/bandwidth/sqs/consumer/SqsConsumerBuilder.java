@@ -20,6 +20,7 @@ public class SqsConsumerBuilder<T> {
     int numPermits = DEFAULT_NUM_PERMITS;
     int bufferSize = DEFAULT_BUFFER_SIZE;
     int priority = DEFAULT_PRIORITY;
+    boolean autoExpire = false;
     BackoffStrategy backoffStrategy = new NullBackoffStrategy();
     ExpirationStrategy expirationStrategy = new VisibilityTimeoutPercentageExpiration(0.5);
 
@@ -46,6 +47,16 @@ public class SqsConsumerBuilder<T> {
      */
     public SqsConsumerBuilder<T> withNumPermits(int numPermits) {
         this.numPermits = numPermits;
+        return this;
+    }
+
+    /**
+     * @param autoExpire Enable/Disable auto expire. If this is enabled, when an sqs message reaches it's
+     *                   visibility timeout, and hasn't been acked yet, it will automatically call ignore() on the
+     *                   acknowledger. Default autoExpire is false.
+     */
+    public SqsConsumerBuilder<T> withAutoExpire(boolean autoExpire) {
+        this.autoExpire = autoExpire;
         return this;
     }
 
