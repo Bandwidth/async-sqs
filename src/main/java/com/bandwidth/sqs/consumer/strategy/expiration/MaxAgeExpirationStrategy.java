@@ -7,11 +7,11 @@ import java.time.Duration;
 /**
  * An expiration strategy where the expiration time does not change
  */
-public class ConstantExpirationStrategy implements ExpirationStrategy {
+public class MaxAgeExpirationStrategy implements ExpirationStrategy {
 
     private final Duration maxAge;
 
-    public ConstantExpirationStrategy(Duration maxAge) {
+    public MaxAgeExpirationStrategy(Duration maxAge) {
         this.maxAge = maxAge;
     }
 
