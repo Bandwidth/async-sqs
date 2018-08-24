@@ -9,7 +9,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.time.Instant;
 
-public class ConstantExpirationStrategyTest {
+public class MaxAgeExpirationStrategyTest {
     private static final String MESSAGE_BODY = "message body";
     private static final String RECEIPT_HANDLE = "a794lhaef";
     private static final String MESSAGE_ID = "message-id";
@@ -17,7 +17,7 @@ public class ConstantExpirationStrategyTest {
     private static final Duration NEW_MESSAGE_AGE = Duration.ofMinutes(3);
     private static final Duration EXPIRED_AGE = Duration.ofMinutes(5);
 
-    private final ConstantExpirationStrategy constantExpirationStrategy = new ConstantExpirationStrategy(MAX_AGE);
+    private final MaxAgeExpirationStrategy maxAgeExpirationStrategy = new MaxAgeExpirationStrategy(MAX_AGE);
 
     @Test
     public void testIsExpiredTrue() {
@@ -28,7 +28,7 @@ public class ConstantExpirationStrategyTest {
                 .receiptHandle(RECEIPT_HANDLE)
                 .build();
 
-        assertThat(constantExpirationStrategy.isExpired(message)).isTrue();
+        assertThat(maxAgeExpirationStrategy.isExpired(message, null)).isTrue();
     }
 
     @Test
@@ -39,6 +39,6 @@ public class ConstantExpirationStrategyTest {
                 .receivedTime(Instant.now().minus(NEW_MESSAGE_AGE))
                 .receiptHandle(RECEIPT_HANDLE)
                 .build();
-        assertThat(constantExpirationStrategy.isExpired(timedMessage)).isFalse();
+        assertThat(maxAgeExpirationStrategy.isExpired(timedMessage, null)).isFalse();
     }
 }

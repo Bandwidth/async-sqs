@@ -10,6 +10,6 @@ public class NeverExpiresStrategyTest {
 
     @Test
     public void testThatFalseEqualsFalse() {
-        assertThat(neverExpiresStrategy.isExpired(null)).isFalse();
+        assertThat(neverExpiresStrategy.isExpired(null, null)).isFalse();
     }
 }

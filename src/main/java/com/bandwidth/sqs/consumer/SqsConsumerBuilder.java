@@ -5,6 +5,7 @@ import com.bandwidth.sqs.consumer.strategy.backoff.BackoffStrategy;
 import com.bandwidth.sqs.consumer.strategy.backoff.NullBackoffStrategy;
 import com.bandwidth.sqs.consumer.strategy.expiration.ExpirationStrategy;
 import com.bandwidth.sqs.consumer.strategy.expiration.NeverExpiresStrategy;
+import com.bandwidth.sqs.consumer.strategy.expiration.VisibilityTimeoutPercentageExpiration;
 import com.bandwidth.sqs.queue.SqsQueue;
 
 public class SqsConsumerBuilder<T> {
@@ -19,8 +20,9 @@ public class SqsConsumerBuilder<T> {
     int numPermits = DEFAULT_NUM_PERMITS;
     int bufferSize = DEFAULT_BUFFER_SIZE;
     int priority = DEFAULT_PRIORITY;
+    boolean autoExpire = false;
     BackoffStrategy backoffStrategy = new NullBackoffStrategy();
-    ExpirationStrategy expirationStrategy = new NeverExpiresStrategy();
+    ExpirationStrategy expirationStrategy = new VisibilityTimeoutPercentageExpiration(0.5);
 
     /**
      * @param manager         A SqsConsumerManager that manages interactions between all of the consumers
@@ -45,6 +47,16 @@ public class SqsConsumerBuilder<T> {
      */
     public SqsConsumerBuilder<T> withNumPermits(int numPermits) {
         this.numPermits = numPermits;
+        return this;
+    }
+
+    /**
+     * @param autoExpire Enable/Disable auto expire. If this is enabled, when an sqs message reaches it's
+     *                   visibility timeout, and hasn't been acked yet, it will automatically call ignore() on the
+     *                   acknowledger. Default autoExpire is false.
+     */
+    public SqsConsumerBuilder<T> withAutoExpire(boolean autoExpire) {
+        this.autoExpire = autoExpire;
         return this;
     }
 
@@ -82,7 +94,7 @@ public class SqsConsumerBuilder<T> {
      * @param priority A consumer with a higher priority (lower value) will have messages processed first
      *                 (0 is the highest priority)
      */
-    public SqsConsumerBuilder<T> withPriority(int priority){
+    public SqsConsumerBuilder<T> withPriority(int priority) {
         this.priority = priority;
         return this;
     }

@@ -65,6 +65,7 @@ public class SqsConsumer<T> {
     private final Disposable permitChangeDisposable;
     private final SqsQueueAttributes queueAttributes;
     private final int priority;
+    private final boolean autoExpire;
 
     private ArrayDeque<SqsMessage<T>> messageBuffer = new ArrayDeque<>();
     private boolean waitingInQueue = false;
@@ -85,9 +86,9 @@ public class SqsConsumer<T> {
         this.backoffStrategy = requireNonNull(builder.backoffStrategy);
         this.manager = requireNonNull(builder.consumerManager);
         this.expirationStrategy = requireNonNull(builder.expirationStrategy);
-
         this.sqsQueue = builder.sqsQueue;
         this.priority = builder.priority;
+        this.autoExpire = builder.autoExpire;
         this.queueAttributes = sqsQueue.getAttributes().blockingGet();
         this.maxPermits = new AtomicInteger(builder.numPermits);
         this.remainingPermits = new AtomicInteger(builder.numPermits);
@@ -171,7 +172,7 @@ public class SqsConsumer<T> {
         boolean completed = shutdownAsync()
                 .blockingAwait(timeout.getSeconds(), TimeUnit.SECONDS);
 
-        if(completed) {
+        if (completed) {
             LOG.info("Graceful shutdown of SQS consumer complete");
         } else {
             LOG.error("Error shutting down SQS Consumer");
@@ -249,11 +250,11 @@ public class SqsConsumer<T> {
             waitingInQueue = true;
 
             manager.queueTask(this::processNextMessage, priority, this);
-            checkIfBackoffDelayNeeded();
+            applyBackoffDelayIfNeeded();
         }
     }
 
-    void checkIfBackoffDelayNeeded() {
+    void applyBackoffDelayIfNeeded() {
         Duration delay = backoffStrategy.getDelayTime(failureAverage.getAverage());
         if (!delay.isZero() && !delay.isNegative()) {
             backoffEndTime = Clock.systemUTC().instant().plus(delay);
@@ -264,40 +265,32 @@ public class SqsConsumer<T> {
     synchronized SqsMessage<T> getNextMessage() {
         SqsMessage<T> message = messageBuffer.pop();
         waitingInQueue = false;
-
-        boolean expired = expirationStrategy.isExpired(message);
-        if (expired) {
-            update();
-            return null;
-        } else {
-            remainingPermits.decrementAndGet();
-            update();
-            return message;
-        }
+        remainingPermits.decrementAndGet();
+        update();
+        return message;
     }
 
     Completable processNextMessage(SqsMessage<T> message) {
-        if (message == null) {
-            return Completable.complete();
-        }
         Duration visibilityTimeout = queueAttributes.getVisibilityTimeout();
-        Instant expirationTime = message.getReceivedTime().plus(visibilityTimeout);
         MessageAcknowledger<T> acknowledger =
-                new MessageAcknowledger<>(sqsQueue, message.getReceiptHandle(), expirationTime);
-
-        Completable.fromRunnable(() -> handler.handleMessage(message, acknowledger))
-                .andThen(acknowledger.getAckMode())
-                .onErrorReturnItem(AckMode.IGNORE)
-                .subscribe((ackMode) -> {
-                    if (ackMode.isSuccessful()) {
-                        failureAverage.addData(MESSAGE_SUCCESS);
-                    } else {
-                        failureAverage.addData(MESSAGE_FAILURE);
-                    }
-                    if (ackMode == MessageAcknowledger.AckMode.RETRY) {
-                        addMessagesToBuffer(Collections.singletonList(message));
-                    }
-                });
+                new MessageAcknowledger<>(sqsQueue, message.getReceiptHandle(), getMessageAutoExpiration(message));
+        if (expirationStrategy.isExpired(message, visibilityTimeout)) {
+            acknowledger.ignore();
+        } else {
+            Completable.fromRunnable(() -> handler.handleMessage(message, acknowledger))
+                    .andThen(acknowledger.getAckMode())
+                    .onErrorReturnItem(AckMode.IGNORE)
+                    .subscribe((ackMode) -> {
+                        if (ackMode.isSuccessful()) {
+                            failureAverage.addData(MESSAGE_SUCCESS);
+                        } else {
+                            failureAverage.addData(MESSAGE_FAILURE);
+                        }
+                        if (ackMode == MessageAcknowledger.AckMode.RETRY) {
+                            addMessagesToBuffer(Collections.singletonList(message));
+                        }
+                    });
+        }
 
         acknowledger.getCompletable().subscribe(() -> {
             remainingPermits.incrementAndGet();
@@ -309,6 +302,16 @@ public class SqsConsumer<T> {
     public enum RequestType {
         LONG_POLLING,
         LOAD_BALANCED
+    }
+
+    private Optional<Instant> getMessageAutoExpiration(SqsMessage<T> message) {
+        if (autoExpire) {
+            Duration visibilityTimeout = queueAttributes.getVisibilityTimeout();
+            Instant expirationTime = message.getReceivedTime().plus(visibilityTimeout);
+            return Optional.of(expirationTime);
+        } else {
+            return Optional.empty();
+        }
     }
 
     private void startNewRequest(RequestType requestType) {

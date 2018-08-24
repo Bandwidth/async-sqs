@@ -19,17 +19,20 @@ public class MessageAcknowledger<T> {
     private final String receiptId;
     private final SingleSubject<AckMode> ackModeSingle;
     private final CompletableSubject ackingComplete;
-    private final Instant expirationTime;
+    private final Optional<Instant> maybeExpirationTime;
 
-    public MessageAcknowledger(SqsQueue<T> sqsQueue, String receiptId, Instant expirationTime) {
-        this.expirationTime = expirationTime;
+    public MessageAcknowledger(SqsQueue<T> sqsQueue, String receiptId, Optional<Instant> maybeExpirationTime) {
+        this.maybeExpirationTime = maybeExpirationTime;
         this.sqsQueue = sqsQueue;
         this.receiptId = receiptId;
         this.ackModeSingle = SingleSubject.create();
         this.ackingComplete = CompletableSubject.create();
 
-        Duration duration = Duration.between(Instant.now(), expirationTime);
-        Completable.timer(duration.toMillis(), TimeUnit.MILLISECONDS).subscribe(this::ignore);
+        maybeExpirationTime.ifPresent((expirationTime) -> {
+            Duration duration = Duration.between(Instant.now(), expirationTime);
+            Completable.timer(duration.toMillis(), TimeUnit.MILLISECONDS).subscribe(this::ignore);
+        });
+
     }
 
     /**
@@ -40,7 +43,7 @@ public class MessageAcknowledger<T> {
         this.receiptId = delegate.receiptId;
         this.ackModeSingle = delegate.ackModeSingle;
         this.ackingComplete = delegate.ackingComplete;
-        this.expirationTime = delegate.expirationTime;
+        this.maybeExpirationTime = delegate.maybeExpirationTime;
     }
 
     /**
@@ -113,7 +116,7 @@ public class MessageAcknowledger<T> {
         doTransfer(newMessage, newQueue, delay).subscribeWith(ackingComplete);
     }
 
-    public void transfer(T newMessage, SqsQueue<T> newQueue){
+    public void transfer(T newMessage, SqsQueue<T> newQueue) {
         transfer(newMessage, newQueue, Optional.empty());
     }
 
