@@ -13,7 +13,6 @@ import com.bandwidth.sqs.queue.SqsMessage;
 import com.bandwidth.sqs.queue.SqsQueue;
 import com.bandwidth.sqs.queue.SqsQueueAttributes;
 
-import io.reactivex.Single;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -275,16 +274,12 @@ public class SqsConsumer<T> {
         Duration visibilityTimeout = queueAttributes.getVisibilityTimeout();
         MessageAcknowledger<T> acknowledger =
                 new MessageAcknowledger<>(sqsQueue, message.getReceiptHandle(), getMessageAutoExpiration(message));
-        Single<AckMode> ackModeSingle;
         if (expirationStrategy.isExpired(message, visibilityTimeout)) {
             acknowledger.ignore();
-            ackModeSingle = acknowledger.getAckMode();
         } else {
-            ackModeSingle = Completable.fromRunnable(
-                () -> handler.handleMessage(message, acknowledger))
-                .andThen(acknowledger.getAckMode())
-                .onErrorReturnItem(AckMode.IGNORE);
-            ackModeSingle
+            Completable.fromRunnable(() -> handler.handleMessage(message, acknowledger))
+                    .andThen(acknowledger.getAckMode())
+                    .onErrorReturnItem(AckMode.IGNORE)
                     .subscribe((ackMode) -> {
                         if (ackMode.isSuccessful()) {
                             failureAverage.addData(MESSAGE_SUCCESS);
@@ -297,7 +292,7 @@ public class SqsConsumer<T> {
                     });
         }
 
-        acknowledger.getCompletable().ambWith(ackModeSingle.toCompletable()).subscribe(() -> {
+        acknowledger.getCompletable().subscribe(() -> {
             remainingPermits.incrementAndGet();
             update();
         });
