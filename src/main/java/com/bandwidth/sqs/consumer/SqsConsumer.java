@@ -278,8 +278,8 @@ public class SqsConsumer<T> {
             acknowledger.ignore();
         } else {
             Completable.fromRunnable(() -> handler.handleMessage(message, acknowledger))
+                    .onErrorResumeNext(throwable -> Completable.fromAction(acknowledger::ignore))
                     .andThen(acknowledger.getAckMode())
-                    .onErrorReturnItem(AckMode.IGNORE)
                     .subscribe((ackMode) -> {
                         if (ackMode.isSuccessful()) {
                             failureAverage.addData(MESSAGE_SUCCESS);
