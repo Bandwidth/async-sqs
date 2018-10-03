@@ -41,7 +41,7 @@ public class SqsConsumer<T> {
     public static final int NUM_MESSAGES_PER_REQUEST = 10;
     public static final Duration LOAD_BALANCED_REQUEST_WAIT_TIME = Duration.ofSeconds(1);
     public static final Duration MAX_WAIT_TIME = Duration.ofSeconds(20);
-    private static final Duration DEFAULT_SHUTDOWN_TIMEOUT = Duration.ofSeconds(30);
+    static final Duration DEFAULT_SHUTDOWN_TIMEOUT = Duration.ofSeconds(30);
 
     static final long MESSAGE_SUCCESS = 0;
     static final long MESSAGE_FAILURE = 1;
@@ -64,6 +64,7 @@ public class SqsConsumer<T> {
     private final CompletableSubject shutdownCompletable = CompletableSubject.create();
     private final Disposable permitChangeDisposable;
     private final SqsQueueAttributes queueAttributes;
+    private final Duration shutdownTimeout;
     private final int priority;
     private final boolean autoExpire;
 
@@ -93,6 +94,7 @@ public class SqsConsumer<T> {
         this.maxPermits = new AtomicInteger(builder.numPermits);
         this.remainingPermits = new AtomicInteger(builder.numPermits);
         this.maxQueueSize = Math.max(NUM_MESSAGES_PER_REQUEST, builder.bufferSize);
+        this.shutdownTimeout = builder.shutdownTimeout;
 
         initFailureAverage();
         manager.addConsumer(this);
@@ -159,7 +161,7 @@ public class SqsConsumer<T> {
      */
     @PreDestroy
     public boolean shutdown() {
-        return shutdown(DEFAULT_SHUTDOWN_TIMEOUT);
+        return shutdown(shutdownTimeout);
     }
 
     /**

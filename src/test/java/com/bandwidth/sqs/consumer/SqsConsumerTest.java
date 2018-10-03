@@ -99,6 +99,7 @@ public class SqsConsumerTest {
                 .withBackoffStrategy(backoffStrategyMock)
                 .withExpirationStrategy(expirationStrategyMock)
                 .withAutoExpire(true)
+                .withShutdownTimeout(SqsConsumer.DEFAULT_SHUTDOWN_TIMEOUT)
                 .build();
 
         consumer.setLoadBalanceStrategy(loadBalanceStrategyMock);
