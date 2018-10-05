@@ -54,6 +54,7 @@ public class SqsConsumerTest {
     private static final String RECEIPT_HANDLE = "receipt handle";
     private static final String MESSAGE_ID = "message-id";
     private static final String QUEUE_URL = "http://www.domain/path";
+    private static final Duration CONFIGURED_SHUTDOWN_TIMEOUT = Duration.ofSeconds(300);
     private final SqsMessage<String> SQS_MESSAGE = SqsMessage.<String>builder()
             .body(MESSAGE_BODY)
             .id(MESSAGE_ID)
@@ -99,6 +100,7 @@ public class SqsConsumerTest {
                 .withBackoffStrategy(backoffStrategyMock)
                 .withExpirationStrategy(expirationStrategyMock)
                 .withAutoExpire(true)
+                .withShutdownTimeout(CONFIGURED_SHUTDOWN_TIMEOUT)
                 .build();
 
         consumer.setLoadBalanceStrategy(loadBalanceStrategyMock);
@@ -398,6 +400,14 @@ public class SqsConsumerTest {
         consumer.setMessageBuffer(messageBufferSmall);
         boolean result = consumer.shutdown(Duration.ofMillis(100));
         assertThat(result).isFalse();
+    }
+
+    @Test
+    public void testUsingConfiguredShutdownTimeout() {
+        SqsConsumer spy = spy(consumer);
+        spy.shutdown();
+        verify(spy).shutdown(CONFIGURED_SHUTDOWN_TIMEOUT);
+        verify(spy, never()).shutdown(SqsConsumer.DEFAULT_SHUTDOWN_TIMEOUT);
     }
 
     @Test

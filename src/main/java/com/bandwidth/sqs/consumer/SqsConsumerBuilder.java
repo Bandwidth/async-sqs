@@ -8,6 +8,8 @@ import com.bandwidth.sqs.consumer.strategy.expiration.NeverExpiresStrategy;
 import com.bandwidth.sqs.consumer.strategy.expiration.VisibilityTimeoutPercentageExpiration;
 import com.bandwidth.sqs.queue.SqsQueue;
 
+import java.time.Duration;
+
 public class SqsConsumerBuilder<T> {
     public static final int DEFAULT_NUM_PERMITS = 500;
     public static final int DEFAULT_BUFFER_SIZE = 640;
@@ -20,6 +22,7 @@ public class SqsConsumerBuilder<T> {
     int numPermits = DEFAULT_NUM_PERMITS;
     int bufferSize = DEFAULT_BUFFER_SIZE;
     int priority = DEFAULT_PRIORITY;
+    Duration shutdownTimeout = SqsConsumer.DEFAULT_SHUTDOWN_TIMEOUT;
     boolean autoExpire = false;
     BackoffStrategy backoffStrategy = new NullBackoffStrategy();
     ExpirationStrategy expirationStrategy = new VisibilityTimeoutPercentageExpiration(0.5);
@@ -96,6 +99,11 @@ public class SqsConsumerBuilder<T> {
      */
     public SqsConsumerBuilder<T> withPriority(int priority) {
         this.priority = priority;
+        return this;
+    }
+
+    public SqsConsumerBuilder<T> withShutdownTimeout(Duration shutdownTimeout) {
+        this.shutdownTimeout = shutdownTimeout;
         return this;
     }
 }
