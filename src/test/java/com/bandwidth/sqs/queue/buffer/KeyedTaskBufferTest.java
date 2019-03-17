@@ -12,7 +12,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.time.Duration;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,14 +38,13 @@ public class KeyedTaskBufferTest {
     );
 
     private final ScheduledExecutorService schedulerMock = mock(ScheduledExecutorService.class);
-    private final ExecutorService executorMock = mock(ExecutorService.class);
 
     private final ArgumentCaptor<Runnable> scheduledTaskCaptor = ArgumentCaptor.forClass(Runnable.class);
     private final ArgumentCaptor<Runnable> executedTaskCaptor = ArgumentCaptor.forClass(Runnable.class);
 
     @Test
     public void testBufferFull() {
-        KeyedTaskBuffer<String, Integer> taskBuffer = new KeyedTaskBuffer<>(schedulerMock, executorMock,
+        KeyedTaskBuffer<String, Integer> taskBuffer = new KeyedTaskBuffer<>(schedulerMock,
                 MAX_BUFFER_SIZE, MAX_WAIT_MILLIS_INFINITE, task);
 
         taskBuffer.addData(KEY_A, 1); //creates new 'A' buffer, not full yet
@@ -54,9 +52,6 @@ public class KeyedTaskBufferTest {
         taskBuffer.addData(KEY_B, 4); //creates new 'B' buffer, not full yet
         taskBuffer.addData(KEY_A, 8); //fills 'A' buffer, A task runner will run
         taskBuffer.addData(KEY_A, 16); //start of next 'A' buffer, not full yet
-
-        verify(executorMock).submit(executedTaskCaptor.capture());
-        executedTaskCaptor.getValue().run();
 
         assertThat(count).isEqualTo(1 + 2 + 8);
     }
@@ -71,7 +66,7 @@ public class KeyedTaskBufferTest {
 
     @Test
     public void testBufferTimeout() {
-        KeyedTaskBuffer<String, Integer> taskBuffer = new KeyedTaskBuffer<>(schedulerMock, executorMock,
+        KeyedTaskBuffer<String, Integer> taskBuffer = new KeyedTaskBuffer<>(schedulerMock,
                 MAX_BUFFER_SIZE, MAX_WAIT_MILLIS_0, task);
 
         taskBuffer.addData(KEY_A, 1);
@@ -80,15 +75,12 @@ public class KeyedTaskBufferTest {
         verify(schedulerMock).schedule(scheduledTaskCaptor.capture(), anyLong(), eq(TimeUnit.MILLISECONDS));
         scheduledTaskCaptor.getValue().run();
 
-        verify(executorMock).submit(executedTaskCaptor.capture());
-        executedTaskCaptor.getValue().run();
-
         assertThat(count).isEqualTo(1 + 2);
     }
 
     @Test
     public void testBufferTimeoutAfterEmptied() {
-        KeyedTaskBuffer<String, Integer> taskBuffer = new KeyedTaskBuffer<>(schedulerMock, executorMock,
+        KeyedTaskBuffer<String, Integer> taskBuffer = new KeyedTaskBuffer<>(schedulerMock,
                 MAX_BUFFER_SIZE, MAX_WAIT_MILLIS_0, task);
         taskBuffer.addData(KEY_A, 1);
         taskBuffer.addData(KEY_A, 2);
@@ -96,9 +88,6 @@ public class KeyedTaskBufferTest {
 
         verify(schedulerMock).schedule(scheduledTaskCaptor.capture(), anyLong(), eq(TimeUnit.MILLISECONDS));
         scheduledTaskCaptor.getValue().run();
-
-        verify(executorMock).submit(executedTaskCaptor.capture());
-        executedTaskCaptor.getValue().run();
 
         assertThat(count).isEqualTo(1 + 2 + 3);
     }
