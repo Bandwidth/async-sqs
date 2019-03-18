@@ -98,9 +98,9 @@ public class KeyedTaskBuffer<K, D> {
      * @param key The task key
      */
     private void processExpiredBatch(final K key) {
-        List<D> batch = fetchAndRemoveBatchIfReady(key, true);
-        if (batch != null) {
-            task.run(key, batch);
+        List<D> readyBatch = fetchAndRemoveBatchIfReady(key, true);
+        if (readyBatch != null) {
+            task.run(key, readyBatch);
         }
     }
 
@@ -110,7 +110,7 @@ public class KeyedTaskBuffer<K, D> {
      * @param key The task key
      * @param expired this is true when invoked from the scheduler thread and false when invoked
      *                after adding a new value to the batch
-     * @return
+     * @return A list of task data if a batch is ready, otherwise Null
      */
     private synchronized List<D> fetchAndRemoveBatchIfReady(K key, boolean expired) {
         if (!buffers.containsKey(key)) {
@@ -129,6 +129,7 @@ public class KeyedTaskBuffer<K, D> {
 
     @PreDestroy
     public void shutdown() {
+        LOG.info("Shutting down keyed task buffer");
         this.scheduledExecutorService.shutdown();
     }
 }

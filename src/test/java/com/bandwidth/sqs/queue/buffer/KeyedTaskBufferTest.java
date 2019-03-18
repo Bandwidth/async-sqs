@@ -110,5 +110,15 @@ public class KeyedTaskBufferTest {
         //unit test can only finish if this is completed
         completedSecondRun.timeout(1000, TimeUnit.MILLISECONDS).blockingAwait();
     }
+
+    @Test
+    public void testShutdown() {
+        KeyedTaskBuffer<String, Integer> taskBuffer = new KeyedTaskBuffer<>(schedulerMock,
+                MAX_BUFFER_SIZE, MAX_WAIT_MILLIS_100, task);
+
+        taskBuffer.shutdown();
+        verify(schedulerMock).shutdown();
+    }
 }
+
 
