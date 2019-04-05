@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 
+import javax.annotation.PreDestroy;
+
 import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.subjects.CompletableSubject;
@@ -85,5 +87,9 @@ public class RetryingSqsQueue<T> implements SqsQueue<T> {
         return delegate.setAttributes(attributes);
     }
 
-
+    @PreDestroy
+    @Override
+    public void shutdown() {
+        delegate.shutdown();
+    }
 }

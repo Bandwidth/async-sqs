@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.annotation.PreDestroy;
+
 import io.reactivex.Completable;
 import io.reactivex.Single;
 
@@ -110,6 +112,13 @@ public class BufferedStringSqsQueue implements SqsQueue<String> {
                         .build()
                 ).collect(Collectors.toList())
         );
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        sendMessageTaskBuffer.shutdown();
+        deleteMessageTaskBuffer.shutdown();
+        changeMessageVisibilityTaskBuffer.shutdown();
     }
 
     @VisibleForTesting
