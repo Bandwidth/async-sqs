@@ -124,6 +124,13 @@ public class SqsConsumerTest {
     }
 
     @Test
+    public void testStopPrefetchIfPermitsZero() {
+        when(consumerHandlerMock.getPermitChangeRequests()).thenReturn(Observable.just(0));
+        consumer.start();
+        verify(sqsQueueMock, never()).receiveMessages(anyInt(), any(Duration.class));
+    }
+
+    @Test
     public void testSetNumPermits() {
         int numPermits = 1234;
         consumer.setNumPermits(numPermits);
