@@ -223,6 +223,9 @@ public class SqsConsumer<T> {
     }
 
     private synchronized void startNewRequestsIfNeeded() {
+        if (maxPermits.get() == 0) {
+            return;
+        }
         if (messageBuffer.size() + NUM_MESSAGES_PER_REQUEST <= maxQueueSize) {
             if (!longPollRequestInFlight.getAndSet(true)) {
                 //always have 1 long-polling request in flight, unless messageBuffer is full
