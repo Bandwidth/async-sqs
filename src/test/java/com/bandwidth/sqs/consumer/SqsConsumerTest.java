@@ -30,6 +30,7 @@ import com.bandwidth.sqs.consumer.handler.ConsumerHandler;
 import com.bandwidth.sqs.queue.SqsMessage;
 import com.bandwidth.sqs.queue.SqsQueue;
 
+import io.reactivex.subjects.BehaviorSubject;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -124,10 +125,22 @@ public class SqsConsumerTest {
     }
 
     @Test
-    public void testStopPrefetchIfPermitsZero() {
-        when(consumerHandlerMock.getPermitChangeRequests()).thenReturn(Observable.just(0));
+    public void testStopAndResumePrefetchIfPermitsZero() {
+        BehaviorSubject<Integer> permitChanges = BehaviorSubject.create();
+        permitChanges.onNext(0);
+        when(consumerHandlerMock.getPermitChangeRequests()).thenReturn(permitChanges);
+        consumer = new SqsConsumerBuilder(consumerManagerMock, sqsQueueMock, consumerHandlerMock)
+                .withNumPermits(NUM_PERMITS)
+                .withBufferSize(MAX_QUEUE_SIZE)
+                .withBackoffStrategy(backoffStrategyMock)
+                .withExpirationStrategy(expirationStrategyMock)
+                .withAutoExpire(true)
+                .withShutdownTimeout(CONFIGURED_SHUTDOWN_TIMEOUT)
+                .build();
         consumer.start();
-        verify(sqsQueueMock, never()).receiveMessages(anyInt(), any(Duration.class));
+        verify(sqsQueueMock, never()).receiveMessages(anyInt(), any(Optional.class));
+        permitChanges.onNext(1);
+        verify(sqsQueueMock).receiveMessages(anyInt(), any(Optional.class));
     }
 
     @Test
