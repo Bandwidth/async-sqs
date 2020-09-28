@@ -99,4 +99,10 @@ public class MappingSqsQueueTest {
         when(deserialize.apply(any())).thenThrow(SERIALIZATION_ERR);
         sqsQueue.receiveMessages().test().assertError(SERIALIZATION_ERR);
     }
+
+    @Test
+    public void testShutdown() {
+        sqsQueue.shutdown();
+        verify(delegateMock).shutdown();
+    }
 }

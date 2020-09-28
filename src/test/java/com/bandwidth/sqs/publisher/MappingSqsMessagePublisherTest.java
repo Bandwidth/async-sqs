@@ -34,4 +34,10 @@ public class MappingSqsMessagePublisherTest {
         verify(delegateMock).publishMessage(MAPPED_VALUE, Optional.empty());
         single.test().assertValue(MESSAGE_ID);
     }
+
+    @Test
+    public void testShutdown() {
+        publisher.shutdown();
+        verify(delegateMock).shutdown();
+    }
 }

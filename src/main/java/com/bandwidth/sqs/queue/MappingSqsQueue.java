@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.PreDestroy;
+
 import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.functions.Function;
@@ -73,5 +75,11 @@ public class MappingSqsQueue<T, U> implements SqsQueue<U> {
             T serializedBody = inverseMap.apply(body);
             return delegate.publishMessage(serializedBody, maybeDelay);
         }).subscribeWith(SingleSubject.create());
+    }
+
+    @PreDestroy
+    @Override
+    public void shutdown() {
+        delegate.shutdown();
     }
 }

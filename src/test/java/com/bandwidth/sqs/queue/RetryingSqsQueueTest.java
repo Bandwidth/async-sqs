@@ -120,4 +120,10 @@ public class RetryingSqsQueueTest {
         retryingQueue.setAttributes(attributesMock);
         verify(delegateMock).setAttributes(attributesMock);
     }
+
+    @Test
+    public void testShutdown() {
+        retryingQueue.shutdown();
+        verify(delegateMock).shutdown();
+    }
 }

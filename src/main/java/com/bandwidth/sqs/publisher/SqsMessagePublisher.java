@@ -18,6 +18,8 @@ public interface SqsMessagePublisher<T> {
      */
     Single<String> publishMessage(T body, Optional<Duration> maybeDelay);
 
+    void shutdown();
+
     /**
      * Publishes a message with the default delay of the SQS queue
      *

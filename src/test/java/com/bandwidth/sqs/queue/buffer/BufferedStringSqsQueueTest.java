@@ -101,4 +101,12 @@ public class BufferedStringSqsQueueTest {
         assertThat(message.getReceiptHandle()).isEqualTo(RECEIPT_HANDLE);
         assertThat(message.getId()).isEqualTo(MESSAGE_ID);
     }
+
+    @Test
+    public void testShutdown() {
+        queue.shutdown();
+        verify(sendMessageTaskBufferMock).shutdown();
+        verify(deleteMessageTaskBufferMock).shutdown();
+        verify(changeMessageVisibilityTaskBufferMock).shutdown();
+    }
 }
